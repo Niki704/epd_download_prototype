@@ -1,3 +1,5 @@
-export default function Home() {
-  return <h1>EPD Download Prototype</h1>;
+import DownloadPage from "@/components/download/DownloadPage";
+
+export default function HomePage() {
+  return <DownloadPage />;
 }
