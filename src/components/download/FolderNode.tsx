@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
+  BookMarked,
+  BookOpenCheck,
   ChevronRight,
   Folder,
   FolderOpen,
@@ -9,18 +11,21 @@ import {
   Layers,
 } from "lucide-react";
 import { DirectoryNode, isDirectory } from "@/types/tree";
+import { highlightTokens } from "@/lib/highlight-text";
 import FileNode from "./FileNode";
 
 const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
   category: Layers,
   medium: GraduationCap,
   grade: Folder,
+  bookType: BookMarked,
+  subject: BookOpenCheck,
 };
 
 function countBooks(node: DirectoryNode): number {
   return node.children.reduce(
     (sum, child) => sum + (isDirectory(child) ? countBooks(child) : 1),
-    0,
+    0
   );
 }
 
@@ -64,7 +69,7 @@ export default function FolderNode({
           <Icon size={17} className="shrink-0 text-[#0F4C4A]" />
         )}
         <span className="truncate text-[15px] font-medium text-[#1C1F1E]">
-          {node.name}
+          {highlightTokens(node.name, query)}
         </span>
         <span className="ml-auto shrink-0 rounded-full bg-[#E4E1D8] px-2 py-0.5 font-mono text-[11px] text-[#5B615F]">
           {bookCount}
@@ -89,7 +94,7 @@ export default function FolderNode({
                 depth={depth + 1}
                 query={query}
               />
-            ),
+            )
           )}
         </div>
       )}

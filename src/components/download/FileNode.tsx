@@ -1,26 +1,11 @@
 import { Download, FileText } from "lucide-react";
 import { BookNode } from "@/types/tree";
+import { highlightTokens } from "@/lib/highlight-text";
 
 interface FileNodeProps {
   node: BookNode;
   depth?: number;
   query?: string;
-}
-
-function highlight(name: string, query: string) {
-  const q = query.trim();
-  if (!q) return name;
-  const idx = name.toLowerCase().indexOf(q.toLowerCase());
-  if (idx === -1) return name;
-  return (
-    <>
-      {name.slice(0, idx)}
-      <mark className="rounded-sm bg-[#C79A3E]/35 text-[#1C1F1E]">
-        {name.slice(idx, idx + q.length)}
-      </mark>
-      {name.slice(idx + q.length)}
-    </>
-  );
 }
 
 export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps) {
@@ -34,7 +19,7 @@ export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps)
       <span className="w-4 shrink-0" />
       <FileText size={16} className="shrink-0 text-[#C79A3E]" />
       <span className="truncate text-[14px] text-[#1C1F1E]">
-        {highlight(node.name, query)}
+        {highlightTokens(node.name, query)}
       </span>
       <span className="ml-auto flex shrink-0 items-center gap-3 text-[12px] text-[#5B615F]">
         <span className="font-mono">{node.year}</span>

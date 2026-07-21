@@ -1,19 +1,23 @@
 export type Medium = "sinhala" | "tamil" | "english";
 
-export type NodeKind = "category" | "medium" | "grade" | "book";
+export type NodeKind =
+  | "category"
+  | "medium"
+  | "grade"
+  | "bookType"
+  | "subject"
+  | "book";
 
 interface BaseNode {
   id: string;
   name: string;
 }
 
-/** A node that contains other nodes (category, medium, or grade level) */
 export interface DirectoryNode extends BaseNode {
-  kind: "category" | "medium" | "grade";
+  kind: "category" | "medium" | "grade" | "bookType" | "subject";
   children: TreeNode[];
 }
 
-/** A leaf node representing a downloadable book */
 export interface BookNode extends BaseNode {
   kind: "book";
   subject: string;
