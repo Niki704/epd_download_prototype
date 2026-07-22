@@ -131,7 +131,11 @@ function moduleStartYear(grade: number): number {
 
 // --- Activity Books (Grades 1–5): bookType → Grade → Term, no subject layer ---
 
-function makeActivityTermBook(grade: number, medium: string, term: number): BookNode {
+function makeActivityTermBook(
+  grade: number,
+  medium: string,
+  term: number,
+): BookNode {
   const slug = `activity-grade-${grade}-${medium}-term-${term}`;
   return {
     id: slug,
@@ -149,11 +153,16 @@ function makeActivityGradeNode(grade: number, medium: string): DirectoryNode {
     id: `activity-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: [1, 2, 3].map((term) => makeActivityTermBook(grade, medium, term)),
+    children: [1, 2, 3].map((term) =>
+      makeActivityTermBook(grade, medium, term),
+    ),
   };
 }
 
-function makeActivityMediumNode(medium: "sinhala" | "tamil", label: string): DirectoryNode {
+function makeActivityMediumNode(
+  medium: "sinhala" | "tamil",
+  label: string,
+): DirectoryNode {
   return {
     id: `activity-medium-${medium}`,
     kind: "medium",
@@ -178,7 +187,7 @@ function makeEssentialTermBook(
   grade: number,
   medium: string,
   subject: string,
-  term: number
+  term: number,
 ): BookNode {
   const slug = `essential-grade-${grade}-${medium}-${subject}-term-${term}`
     .toLowerCase()
@@ -194,7 +203,11 @@ function makeEssentialTermBook(
   };
 }
 
-function makeEssentialSubjectNode(grade: number, medium: string, subject: string): DirectoryNode {
+function makeEssentialSubjectNode(
+  grade: number,
+  medium: string,
+  subject: string,
+): DirectoryNode {
   const slug = `essential-subject-${grade}-${medium}-${subject}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-");
@@ -202,7 +215,9 @@ function makeEssentialSubjectNode(grade: number, medium: string, subject: string
     id: slug,
     kind: "subject",
     name: subject,
-    children: [1, 2, 3].map((term) => makeEssentialTermBook(grade, medium, subject, term)),
+    children: [1, 2, 3].map((term) =>
+      makeEssentialTermBook(grade, medium, subject, term),
+    ),
   };
 }
 
@@ -211,19 +226,23 @@ function makeEssentialGradeNode(grade: number, medium: string): DirectoryNode {
     id: `essential-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: SUBJECTS_6_11.map((s) => makeEssentialSubjectNode(grade, medium, s)),
+    children: SUBJECTS_6_11.map((s) =>
+      makeEssentialSubjectNode(grade, medium, s),
+    ),
   };
 }
 
 function makeEssentialMediumNode(
   medium: "sinhala" | "tamil" | "english",
-  label: string
+  label: string,
 ): DirectoryNode {
   return {
     id: `essential-medium-${medium}`,
     kind: "medium",
     name: label,
-    children: [6, 7, 8, 9, 10, 11].map((g) => makeEssentialGradeNode(g, medium)),
+    children: [6, 7, 8, 9, 10, 11].map((g) =>
+      makeEssentialGradeNode(g, medium),
+    ),
   };
 }
 
@@ -242,7 +261,11 @@ export const essentialLearningTree: DirectoryNode = {
 // Every subject is released for every student — no per-student subject
 // selection logic here, and no term split (unconfirmed / subject to change).
 
-function makeFurtherSubjectBook(grade: number, medium: string, subject: string): BookNode {
+function makeFurtherSubjectBook(
+  grade: number,
+  medium: string,
+  subject: string,
+): BookNode {
   const slug = `further-grade-${grade}-${medium}-${subject}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-");
@@ -262,13 +285,15 @@ function makeFurtherGradeNode(grade: number, medium: string): DirectoryNode {
     id: `further-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: FURTHER_LEARNING_SUBJECTS.map((s) => makeFurtherSubjectBook(grade, medium, s)),
+    children: FURTHER_LEARNING_SUBJECTS.map((s) =>
+      makeFurtherSubjectBook(grade, medium, s),
+    ),
   };
 }
 
 function makeFurtherMediumNode(
   medium: "sinhala" | "tamil" | "english",
-  label: string
+  label: string,
 ): DirectoryNode {
   return {
     id: `further-medium-${medium}`,
@@ -289,15 +314,75 @@ export const furtherLearningTree: DirectoryNode = {
   ],
 };
 
+// ────────────────────────────────────────────────────────────
+// Transversal Skills Books (new — under Modules, flat, no sub-categories yet)
+// ────────────────────────────────────────────────────────────
+
+export const transversalSkillsTree: DirectoryNode = {
+  id: "transversal-skills-books",
+  kind: "bookType",
+  name: "Transversal Skills Books",
+  children: [
+    {
+      id: "transversal-social-charity-services",
+      kind: "book",
+      name: "Social Charity Services Book",
+      subject: "Social Charity Services",
+      year: 2026,
+      fileSize: "2.8 MB",
+      fileUrl: "/downloads/modules/transversal-social-charity-services.pdf",
+    },
+    {
+      id: "transversal-global-study",
+      kind: "book",
+      name: "Global Study Book",
+      subject: "Global Study",
+      year: 2026,
+      fileSize: "3.0 MB",
+      fileUrl: "/downloads/modules/transversal-global-study.pdf",
+    },
+  ],
+};
+
+// ────────────────────────────────────────────────────────────
+// General English (new — top-level root, flat, single sample book)
+// ────────────────────────────────────────────────────────────
+
+export const generalEnglishTree: DirectoryNode = {
+  id: "general-english",
+  kind: "category",
+  name: "General English",
+  children: [
+    {
+      id: "general-english-sample-book",
+      kind: "book",
+      name: "General English Book",
+      subject: "General English",
+      year: 2026,
+      fileSize: "2.5 MB",
+      fileUrl: "/downloads/general-english/general-english-sample-book.pdf",
+    },
+  ],
+};
+
 export const moduleTree: DirectoryNode = {
   id: "modules",
   kind: "category",
   name: "Modules",
-  children: [activityBooksTree, essentialLearningTree, furtherLearningTree],
+  children: [
+    activityBooksTree,
+    essentialLearningTree,
+    furtherLearningTree,
+    transversalSkillsTree,
+  ],
 };
 
 // ────────────────────────────────────────────────────────────
 // Combined roots — both trees start at the same top level
 // ────────────────────────────────────────────────────────────
 
-export const downloadRoots: DirectoryNode[] = [textbookTree, moduleTree];
+export const downloadRoots: DirectoryNode[] = [
+  textbookTree,
+  moduleTree,
+  generalEnglishTree,
+];
