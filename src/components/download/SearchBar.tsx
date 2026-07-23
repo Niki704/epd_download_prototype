@@ -13,7 +13,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
       <div className="relative">
         <span
           aria-hidden
-          className="pointer-events-none absolute left-2 sm:left-3 top-1/2 block h-3 w-3 sm:h-4 sm:w-4 z-10 -translate-y-1/2 bg-white/60"
+          className="pointer-events-none absolute left-2 sm:left-3 top-[55%] sm:top-1/2 block h-3 w-3 sm:h-4 sm:w-4 z-10 -translate-y-1/2 bg-white/60"
           style={{
             maskImage: "url(/search.svg)",
             maskSize: "contain",

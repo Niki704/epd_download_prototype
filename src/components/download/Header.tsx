@@ -38,8 +38,8 @@ export default function Header({ query, onQueryChange }: HeaderProps) {
           School Book Download Archive
         </h1>
         <p className="mt-2 text-[13px] text-white/85 sm:text-[15px]">
-          Browse textbooks by grade category, medium, and grade to find and
-          download the books you need.
+          Browse Textbooks, Modules, and Other Books by category, medium,
+          and grade or you can search directly to find the book you need.
         </p>
       </div>
     </header>

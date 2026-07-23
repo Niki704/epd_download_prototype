@@ -8,6 +8,10 @@ interface FileNodeProps {
   query?: string;
 }
 
+function formatDownloads(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
 export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps) {
   return (
     <a
@@ -24,6 +28,13 @@ export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps)
       <span className="ml-auto flex shrink-0 items-center gap-3 text-[12px] text-[#5B615F]">
         <span className="font-mono">{node.year}</span>
         <span className="font-mono">{node.fileSize}</span>
+        <span
+          className="flex items-center gap-1 font-mono"
+          title={`${node.downloads.toLocaleString()} downloads`}
+        >
+          <Download size={13} className="text-[#5B615F]" />
+          {formatDownloads(node.downloads)}
+        </span>
         <Download
           size={15}
           className="text-[#5B615F] transition-colors group-hover:text-[#0F4C4A]"

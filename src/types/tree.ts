@@ -24,6 +24,7 @@ export interface BookNode extends BaseNode {
   year: number;
   fileSize: string;
   fileUrl: string;
+  downloads: number;
 }
 
 export type TreeNode = DirectoryNode | BookNode;
