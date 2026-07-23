@@ -1,4 +1,5 @@
 import { DirectoryNode, BookNode } from "@/types/tree";
+import { buildSyllabusGrid, SyllabusGrid } from "@/lib/syllabus";
 
 // ────────────────────────────────────────────────────────────
 // Textbooks (unchanged from before)
@@ -19,6 +20,22 @@ const SUBJECTS_6_11 = [
   "Language & Literature",
 ];
 
+// Mock curriculum version years. A real system would pull this from a
+// `curriculum_versions` table (or a `curriculum_year` column on each book
+// row) — this is a stand-in that keeps the same year for a given
+// grade+subject across every medium, since a syllabus revision applies
+// regardless of language.
+const CURRICULUM_YEARS = [2019, 2021, 2023, 2025];
+
+function curriculumYear(grade: number, subject: string): number {
+  const seed = `${grade}-${subject}`;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 1000;
+  }
+  return CURRICULUM_YEARS[hash % CURRICULUM_YEARS.length];
+}
+
 function makeBook(
   gradeLabel: string,
   medium: string,
@@ -33,9 +50,10 @@ function makeBook(
     kind: "book",
     name: subject,
     subject,
-    year: 2025,
+    year: curriculumYear(grade, subject),
     fileSize: `${(2 + (grade % 4) * 0.6).toFixed(1)} MB`,
     fileUrl: `/downloads/textbooks/${slug}.pdf`,
+    downloads: mockDownloads(slug),
   };
 }
 
@@ -64,6 +82,16 @@ function makeMediumNode(
     name: label,
     children: grades.map((g) => makeGradeNode(g, medium, subjects)),
   };
+}
+
+// Deterministic mock download count so numbers stay stable across renders
+// instead of re-randomizing on every reload.
+function mockDownloads(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 100000;
+  }
+  return 40 + (hash % 2400); // range: 40–2439
 }
 
 const grade1to5: DirectoryNode = {
@@ -109,6 +137,11 @@ export const textbookTree: DirectoryNode = {
   children: [grade1to5, grade6to11],
 };
 
+export const syllabusGrids: SyllabusGrid[] = [
+  buildSyllabusGrid(grade1to5, "Grade 1 - 5"),
+  buildSyllabusGrid(grade6to11, "Grade 6 - 11"),
+];
+
 // ────────────────────────────────────────────────────────────
 // Modules (reshaped)
 // Three book types sit directly under Modules as siblings:
@@ -145,6 +178,7 @@ function makeActivityTermBook(
     year: moduleStartYear(grade),
     fileSize: `${(1.5 + (term % 3) * 0.4).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
+    downloads: mockDownloads(slug),
   };
 }
 
@@ -200,6 +234,7 @@ function makeEssentialTermBook(
     year: moduleStartYear(grade),
     fileSize: `${(1.5 + (term % 3) * 0.4).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
+    downloads: mockDownloads(slug),
   };
 }
 
@@ -277,6 +312,7 @@ function makeFurtherSubjectBook(
     year: moduleStartYear(grade),
     fileSize: `${(2.2 + (grade % 3) * 0.5).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
+    downloads: mockDownloads(slug),
   };
 }
 
@@ -331,6 +367,7 @@ export const transversalSkillsTree: DirectoryNode = {
       year: 2026,
       fileSize: "2.8 MB",
       fileUrl: "/downloads/modules/transversal-social-charity-services.pdf",
+      downloads: mockDownloads("transversal-social-charity-services"),
     },
     {
       id: "transversal-global-study",
@@ -340,6 +377,7 @@ export const transversalSkillsTree: DirectoryNode = {
       year: 2026,
       fileSize: "3.0 MB",
       fileUrl: "/downloads/modules/transversal-global-study.pdf",
+      downloads: mockDownloads("transversal-global-study"),
     },
   ],
 };
@@ -361,6 +399,7 @@ export const generalEnglishTree: DirectoryNode = {
       year: 2026,
       fileSize: "2.5 MB",
       fileUrl: "/downloads/general-english/general-english-sample-book.pdf",
+      downloads: mockDownloads("general-english-sample-book"),
     },
   ],
 };
