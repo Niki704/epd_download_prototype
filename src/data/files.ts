@@ -96,6 +96,63 @@ function makeMediumNode(
   };
 }
 
+// Small local helper — Common English Books leaves aren't generated from a
+// uniform subject list (unlike everything else in the tree), since the
+// book count and titles genuinely differ per grade. Hand-built on purpose.
+function makeCommonEnglishBook(
+  id: string,
+  name: string,
+  grade: number,
+): BookNode {
+  return {
+    id,
+    kind: "book",
+    name,
+    subject: name,
+    printYear: mockPrintYear(grade, name),
+    fileSize: `${(1.6 + (grade % 3) * 0.3).toFixed(1)} MB`,
+    fileUrl: `/downloads/textbooks/${id}.pdf`,
+    downloads: mockDownloads(id),
+  };
+}
+
+function makeCommonEnglishGradeNode(
+  grade: number,
+  bookNames: string[],
+): DirectoryNode {
+  return {
+    id: `common-english-1-5-grade-${grade}`,
+    kind: "grade",
+    name: `Grade ${grade}`,
+    children: bookNames.map((name) =>
+      makeCommonEnglishBook(
+        `common-english-1-5-grade-${grade}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+        name,
+        grade,
+      ),
+    ),
+  };
+}
+
+// --- Grade 1–5: Sinhala Medium, Tamil Medium, Common English Books ---
+
+const commonEnglishBooks1to5: DirectoryNode = {
+  id: "common-english-books-1-5",
+  kind: "bookType",
+  name: "Common English Books",
+  children: [
+    makeCommonEnglishGradeNode(1, ["ABOE Activity Book (Grade 1)", "ABOE Song Book (Grade 1"]),
+    makeCommonEnglishGradeNode(2, ["ABOE Activity Book (Grade 2)", "ABOE Song Book (Grade 2)"]),
+    makeCommonEnglishGradeNode(3, [
+      "English Reading Book",
+      "English Workbook",
+      "English Writing Practice",
+    ]),
+    makeCommonEnglishGradeNode(4, ["English Reading Book", "English Workbook"]),
+    makeCommonEnglishGradeNode(5, ["English Reading Book", "English Workbook"]),
+  ],
+};
+
 const grade1to5: DirectoryNode = {
   id: "category-1-5",
   kind: "category",
@@ -103,7 +160,51 @@ const grade1to5: DirectoryNode = {
   children: [
     makeMediumNode("sinhala", "Sinhala Medium", [1, 2, 3, 4, 5], SUBJECTS_1_5),
     makeMediumNode("tamil", "Tamil Medium", [1, 2, 3, 4, 5], SUBJECTS_1_5),
+    commonEnglishBooks1to5,
   ],
+};
+
+// --- Grade 6–11: Sinhala Medium, Tamil Medium, English Medium, Common English Books ---
+
+// Uniform per grade (always exactly Pupils Book + Work Book), so a loop
+// fits here — unlike the 1–5 case above.
+function makeCommonEnglishGradeNode6to11(grade: number): DirectoryNode {
+  const pupilsId = `common-english-6-11-grade-${grade}-pupils`;
+  const workId = `common-english-6-11-grade-${grade}-workbook`;
+  return {
+    id: `common-english-6-11-grade-${grade}`,
+    kind: "grade",
+    name: `Grade ${grade}`,
+    children: [
+      {
+        id: pupilsId,
+        kind: "book",
+        name: "English Pupils Book",
+        subject: "English Pupils Book",
+        printYear: mockPrintYear(grade, "English Pupils Book"),
+        fileSize: `${(1.8 + (grade % 3) * 0.3).toFixed(1)} MB`,
+        fileUrl: `/downloads/textbooks/${pupilsId}.pdf`,
+        downloads: mockDownloads(pupilsId),
+      },
+      {
+        id: workId,
+        kind: "book",
+        name: "English Work Book",
+        subject: "English Work Book",
+        printYear: mockPrintYear(grade, "English Work Book"),
+        fileSize: `${(1.5 + (grade % 3) * 0.3).toFixed(1)} MB`,
+        fileUrl: `/downloads/textbooks/${workId}.pdf`,
+        downloads: mockDownloads(workId),
+      },
+    ],
+  };
+}
+
+const commonEnglishBooks6to11: DirectoryNode = {
+  id: "common-english-books-6-11",
+  kind: "bookType",
+  name: "Common English Books",
+  children: [6, 7, 8, 9, 10, 11].map((g) => makeCommonEnglishGradeNode6to11(g)),
 };
 
 const grade6to11: DirectoryNode = {
@@ -129,6 +230,7 @@ const grade6to11: DirectoryNode = {
       [6, 7, 8, 9, 10, 11],
       SUBJECTS_6_11,
     ),
+    commonEnglishBooks6to11,
   ],
 };
 
