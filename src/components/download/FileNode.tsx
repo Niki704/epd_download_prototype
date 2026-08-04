@@ -26,7 +26,7 @@ export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps)
         {highlightTokens(node.name, query)}
       </span>
       <span className="ml-auto flex shrink-0 items-center gap-3 text-[12px] text-[#5B615F]">
-        <span className="font-mono">{node.year}</span>
+        <span className="font-mono">{node.printYear}</span>
         <span className="font-mono">{node.fileSize}</span>
         <span
           className="flex items-center gap-1 font-mono"
