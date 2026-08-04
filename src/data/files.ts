@@ -628,25 +628,48 @@ export const essentialLearningTree: DirectoryNode = {
   ],
 };
 
-// --- Further Learning Books (Grades 6–11): bookType → Medium → Grade → Subject (leaf, no term) ---
-// Every subject is released for every student — no per-student subject
-// selection logic here, and no term split (unconfirmed / subject to change).
+// --- Further Learning Books (Grades 6–11): now Grade → Subject → Term ×3,
+// matching Essential Learning Books' shape ---
 
-function makeFurtherSubjectBook(
+function makeFurtherTermBook(
   grade: number,
   medium: string,
   subject: string,
+  term: number,
 ): BookNode {
-  const slug = slugify("further-grade", String(grade), medium, subject);
+  const slug = slugify(
+    "further-grade",
+    String(grade),
+    medium,
+    subject,
+    "term",
+    String(term),
+  );
   return {
     id: slug,
     kind: "book",
-    name: subject,
+    name: `Term ${term}`,
     subject,
     printYear: moduleStartYear(grade),
-    fileSize: `${(2.2 + (grade % 3) * 0.5).toFixed(1)} MB`,
+    fileSize: `${(2.2 + (term % 3) * 0.4).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
     downloads: mockDownloads(slug),
+  };
+}
+
+function makeFurtherSubjectNode(
+  grade: number,
+  medium: string,
+  subject: string,
+): DirectoryNode {
+  const slug = slugify("further-subject", String(grade), medium, subject);
+  return {
+    id: slug,
+    kind: "subject",
+    name: subject,
+    children: [1, 2, 3].map((term) =>
+      makeFurtherTermBook(grade, medium, subject, term),
+    ),
   };
 }
 
@@ -656,7 +679,7 @@ function makeFurtherGradeNode(grade: number, medium: string): DirectoryNode {
     kind: "grade",
     name: `Grade ${grade}`,
     children: FURTHER_LEARNING_SUBJECTS.map((s) =>
-      makeFurtherSubjectBook(grade, medium, s),
+      makeFurtherSubjectNode(grade, medium, s),
     ),
   };
 }
