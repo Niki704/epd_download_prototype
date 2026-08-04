@@ -2,25 +2,6 @@ import { DirectoryNode, BookNode } from "@/types/tree";
 import { buildPrintYearGrid, PrintYearGrid } from "@/lib/print-years";
 
 // ────────────────────────────────────────────────────────────
-// Textbooks (unchanged from before)
-// ────────────────────────────────────────────────────────────
-
-const SUBJECTS_1_5 = [
-  "Mathematics",
-  "Environmental Studies",
-  "Religion",
-  "Language",
-];
-const SUBJECTS_6_11 = [
-  "Mathematics",
-  "Science",
-  "History",
-  "Geography",
-  "Religion",
-  "Language & Literature",
-];
-
-// ────────────────────────────────────────────────────────────
 // Shared mock helpers
 // ────────────────────────────────────────────────────────────
 
@@ -48,15 +29,22 @@ function mockDownloads(seed: string): number {
   return 40 + (hash % 2400);
 }
 
-function makeBook(
-  gradeLabel: string,
-  medium: string,
-  subject: string,
-  grade: number,
-): BookNode {
-  const slug = `${gradeLabel}-${medium}-${subject}`
+function slugify(...parts: string[]): string {
+  return parts
+    .join("-")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-");
+}
+
+type MediumKey = "sinhala" | "tamil" | "english";
+
+function makeSubjectBook(
+  grade: number,
+  medium: string,
+  subject: string,
+  urlBase: string,
+): BookNode {
+  const slug = slugify("grade", String(grade), medium, subject);
   return {
     id: slug,
     kind: "book",
@@ -64,41 +52,156 @@ function makeBook(
     subject,
     printYear: mockPrintYear(grade, subject),
     fileSize: `${(2 + (grade % 4) * 0.6).toFixed(1)} MB`,
-    fileUrl: `/downloads/textbooks/${slug}.pdf`,
+    fileUrl: `/downloads/${urlBase}/${slug}.pdf`,
     downloads: mockDownloads(slug),
   };
 }
 
-function makeGradeNode(
+function makeGradeNodeFromSubjects(
   grade: number,
   medium: string,
   subjects: string[],
+  urlBase: string,
 ): DirectoryNode {
   return {
-    id: `grade-${grade}-${medium}`,
+    id: `grade-${grade}-${medium}-${urlBase}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: subjects.map((s) => makeBook(`grade-${grade}`, medium, s, grade)),
+    children: subjects.map((s) => makeSubjectBook(grade, medium, s, urlBase)),
   };
 }
 
-function makeMediumNode(
-  medium: "sinhala" | "tamil" | "english",
+// ────────────────────────────────────────────────────────────
+// Phase 1: Textbooks — Grade 1–5 (Primary), reconciled against the real
+// booklist. ABOE/English items excluded here — they live in Common
+// English Books below, and already matched the booklist exactly.
+// ────────────────────────────────────────────────────────────
+
+const PRIMARY_GRADE_SUBJECTS: Record<
+  number,
+  { sinhala: string[]; tamil: string[] }
+> = {
+  1: {
+    sinhala: [
+      "Buddhism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Sinhala Reading Book",
+      "Sinhala Workbook",
+      "Mathematics",
+    ],
+    tamil: [
+      "Hinduism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Tamil Reading Book",
+      "Tamil Workbook",
+      "Mathematics",
+    ],
+  },
+  2: {
+    sinhala: [
+      "Buddhism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Sinhala Reading Book",
+      "Sinhala Workbook",
+      "Mathematics",
+    ],
+    tamil: [
+      "Hinduism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Tamil Reading Book",
+      "Tamil Workbook",
+      "Mathematics",
+    ],
+  },
+  3: {
+    sinhala: [
+      "Buddhism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Sinhala Reading Book",
+      "Sinhala Workbook",
+      "Mathematics Part I",
+      "Mathematics Part II",
+    ],
+    tamil: [
+      "Hinduism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Tamil Reading Book",
+      "Tamil Workbook",
+      "Mathematics Part I",
+      "Mathematics Part II",
+    ],
+  },
+  4: {
+    sinhala: [
+      "Buddhism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Sinhala Reading Book",
+      "Mathematics",
+    ],
+    tamil: [
+      "Hinduism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Tamil Reading Book",
+      "Mathematics",
+    ],
+  },
+  5: {
+    sinhala: [
+      "Buddhism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Sinhala Reading Book",
+      "Mathematics",
+    ],
+    tamil: [
+      "Hinduism",
+      "Catholicism",
+      "Christianity",
+      "Islam",
+      "Tamil Reading Book",
+      "Mathematics",
+    ],
+  },
+};
+
+function makePrimaryMediumNode(
+  medium: "sinhala" | "tamil",
   label: string,
-  grades: number[],
-  subjects: string[],
 ): DirectoryNode {
   return {
-    id: `medium-${medium}-${grades[0]}-${grades[grades.length - 1]}`,
+    id: `primary-medium-${medium}`,
     kind: "medium",
     name: label,
-    children: grades.map((g) => makeGradeNode(g, medium, subjects)),
+    children: [1, 2, 3, 4, 5].map((g) =>
+      makeGradeNodeFromSubjects(
+        g,
+        medium,
+        PRIMARY_GRADE_SUBJECTS[g][medium],
+        "textbooks",
+      ),
+    ),
   };
 }
 
-// Small local helper — Common English Books leaves aren't generated from a
-// uniform subject list (unlike everything else in the tree), since the
-// book count and titles genuinely differ per grade. Hand-built on purpose.
+// Common English Books (Grade 1–5) — unchanged from before, already
+// matched the booklist exactly.
 function makeCommonEnglishBook(
   id: string,
   name: string,
@@ -126,7 +229,7 @@ function makeCommonEnglishGradeNode(
     name: `Grade ${grade}`,
     children: bookNames.map((name) =>
       makeCommonEnglishBook(
-        `common-english-1-5-grade-${grade}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+        slugify("common-english-1-5-grade", String(grade), name),
         name,
         grade,
       ),
@@ -141,8 +244,8 @@ const commonEnglishBooks1to5: DirectoryNode = {
   kind: "bookType",
   name: "Common English Books",
   children: [
-    makeCommonEnglishGradeNode(1, ["ABOE Activity Book (Grade 1)", "ABOE Song Book (Grade 1"]),
-    makeCommonEnglishGradeNode(2, ["ABOE Activity Book (Grade 2)", "ABOE Song Book (Grade 2)"]),
+    makeCommonEnglishGradeNode(1, ["ABOE Activity Book", "ABOE Song Book"]),
+    makeCommonEnglishGradeNode(2, ["ABOE Activity Book", "ABOE Song Book"]),
     makeCommonEnglishGradeNode(3, [
       "English Reading Book",
       "English Workbook",
@@ -158,43 +261,164 @@ const grade1to5: DirectoryNode = {
   kind: "category",
   name: "Grade 1 – 5",
   children: [
-    makeMediumNode("sinhala", "Sinhala Medium", [1, 2, 3, 4, 5], SUBJECTS_1_5),
-    makeMediumNode("tamil", "Tamil Medium", [1, 2, 3, 4, 5], SUBJECTS_1_5),
+    makePrimaryMediumNode("sinhala", "Sinhala Medium"),
+    makePrimaryMediumNode("tamil", "Tamil Medium"),
     commonEnglishBooks1to5,
   ],
 };
 
-// --- Grade 6–11: Sinhala Medium, Tamil Medium, English Medium, Common English Books ---
+// ────────────────────────────────────────────────────────────
+// Phase 2 + 3: Textbooks — Grade 6–11 (Secondary), reconciled + renamed
+// Common English Books to match the official booklist.
+// ────────────────────────────────────────────────────────────
 
-// Uniform per grade (always exactly Pupils Book + Work Book), so a loop
-// fits here — unlike the 1–5 case above.
+interface SubjectAvailability {
+  name: string;
+  mediums: MediumKey[];
+}
+
+function subjectsForMedium(
+  band: SubjectAvailability[],
+  medium: MediumKey,
+): string[] {
+  return band.filter((s) => s.mediums.includes(medium)).map((s) => s.name);
+}
+
+const BAND_GRADE_6: SubjectAvailability[] = [
+  { name: "Buddhism", mediums: ["sinhala"] },
+  { name: "Hinduism", mediums: ["tamil"] },
+  { name: "Catholicism", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Christianity", mediums: ["sinhala", "tamil"] },
+  { name: "Islam", mediums: ["sinhala", "tamil"] },
+  { name: "Sinhala Language and Literature", mediums: ["sinhala"] },
+  { name: "Tamil Language and Literature", mediums: ["tamil"] },
+  { name: "Mathematics Part I", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Mathematics Part II", mediums: ["sinhala", "tamil", "english"] },
+  { name: "History", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Science", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Geography", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Civic Education", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Secondary Language Tamil", mediums: ["sinhala"] },
+  { name: "Secondary Language Sinhala", mediums: ["tamil"] },
+  {
+    name: "Information & Communication Technology Reading Book",
+    mediums: ["sinhala", "tamil", "english"],
+  },
+  {
+    name: "Information & Communication Technology Workbook",
+    mediums: ["sinhala", "tamil", "english"],
+  },
+  {
+    name: "Health & Physical Education",
+    mediums: ["sinhala", "tamil", "english"],
+  },
+  { name: "Practical & Technical Skills", mediums: ["sinhala", "tamil"] },
+];
+
+const BAND_GRADE_7_8: SubjectAvailability[] = [
+  ...BAND_GRADE_6.filter((s) => s.name !== "Science"),
+  { name: "Science Part I", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Science Part II", mediums: ["sinhala", "tamil", "english"] },
+];
+
+const BAND_GRADE_9: SubjectAvailability[] = [
+  ...BAND_GRADE_7_8,
+  { name: "Mathematics Part III", mediums: ["sinhala", "tamil", "english"] },
+];
+
+const BAND_GRADE_10_11: SubjectAvailability[] = [
+  ...BAND_GRADE_9.filter(
+    (s) =>
+      s.name !== "Information & Communication Technology Reading Book" &&
+      s.name !== "Information & Communication Technology Workbook",
+  ),
+  {
+    name: "Information & Communication Technology",
+    mediums: ["sinhala", "tamil", "english"],
+  },
+  { name: "Sinhala Literature Anthology", mediums: ["sinhala", "tamil"] },
+  {
+    name: "Entrepreneurship Studies",
+    mediums: ["sinhala", "tamil", "english"],
+  },
+  {
+    name: "Business & Accounting Studies",
+    mediums: ["sinhala", "tamil", "english"],
+  },
+  { name: "Sinhala Literature", mediums: ["sinhala", "tamil", "english"] },
+  { name: "Agricultural Science", mediums: ["sinhala", "tamil"] },
+  { name: "Aquatic Bioresources Technology", mediums: ["sinhala", "tamil"] },
+  { name: "Design & Construction Technology", mediums: ["sinhala", "tamil"] },
+  { name: "Design & Mechanical Technology", mediums: ["sinhala", "tamil"] },
+  {
+    name: "Design Electrical & Electronic Technology",
+    mediums: ["sinhala", "tamil"],
+  },
+  { name: "Arts & Crafts", mediums: ["sinhala", "tamil"] },
+  { name: "Home Economics", mediums: ["sinhala", "tamil"] },
+  { name: "Communication and Media Studies", mediums: ["sinhala", "tamil"] },
+  // Doesn't fit the medium split — single edition, no Sinhala/Tamil/English
+  // variants. Placed here as a pragmatic default; needs a real decision.
+  { name: "Japanese Language", mediums: ["sinhala"] },
+];
+
+const SECONDARY_BANDS: Record<number, SubjectAvailability[]> = {
+  6: BAND_GRADE_6,
+  7: BAND_GRADE_7_8,
+  8: BAND_GRADE_7_8,
+  9: BAND_GRADE_9,
+  10: BAND_GRADE_10_11,
+  11: BAND_GRADE_10_11,
+};
+
+function makeSecondaryMediumNode(
+  medium: MediumKey,
+  label: string,
+): DirectoryNode {
+  return {
+    id: `secondary-medium-${medium}`,
+    kind: "medium",
+    name: label,
+    children: [6, 7, 8, 9, 10, 11].map((g) =>
+      makeGradeNodeFromSubjects(
+        g,
+        medium,
+        subjectsForMedium(SECONDARY_BANDS[g], medium),
+        "textbooks",
+      ),
+    ),
+  };
+}
+
+// Common English Books (Grade 6–11) — renamed to match the official
+// booklist: "English Reading Book" / "English Workbook".
 function makeCommonEnglishGradeNode6to11(grade: number): DirectoryNode {
-  const pupilsId = `common-english-6-11-grade-${grade}-pupils`;
-  const workId = `common-english-6-11-grade-${grade}-workbook`;
+  const readingId = `common-english-6-11-grade-${grade}-reading`;
+  const workbookId = `common-english-6-11-grade-${grade}-workbook`;
   return {
     id: `common-english-6-11-grade-${grade}`,
     kind: "grade",
     name: `Grade ${grade}`,
     children: [
       {
-        id: pupilsId,
+        id: readingId,
         kind: "book",
-        name: "English Pupils Book",
-        subject: "English Pupils Book",
-        printYear: mockPrintYear(grade, "English Pupils Book"),
+        name: "English Reading Book",
+        subject: "English Reading Book",
+        printYear: mockPrintYear(grade, "English Reading Book"),
         fileSize: `${(1.8 + (grade % 3) * 0.3).toFixed(1)} MB`,
-        fileUrl: `/downloads/textbooks/${pupilsId}.pdf`,
-        downloads: mockDownloads(pupilsId),
+        fileUrl: `/downloads/textbooks/${readingId}.pdf`,
+        downloads: mockDownloads(readingId),
       },
       {
-        id: workId,
+        id: workbookId,
         kind: "book",
-        name: "English Work Book",
-        subject: "English Work Book",
-        printYear: mockPrintYear(grade, "English Work Book"),
+        name: "English Workbook",
+        subject: "English Workbook",
+        printYear: mockPrintYear(grade, "English Workbook"),
         fileSize: `${(1.5 + (grade % 3) * 0.3).toFixed(1)} MB`,
-        fileUrl: `/downloads/textbooks/${workId}.pdf`,
-        downloads: mockDownloads(workId),
+        fileUrl: `/downloads/textbooks/${workbookId}.pdf`,
+        downloads: mockDownloads(workbookId),
       },
     ],
   };
@@ -212,24 +436,9 @@ const grade6to11: DirectoryNode = {
   kind: "category",
   name: "Grade 6 – 11",
   children: [
-    makeMediumNode(
-      "sinhala",
-      "Sinhala Medium",
-      [6, 7, 8, 9, 10, 11],
-      SUBJECTS_6_11,
-    ),
-    makeMediumNode(
-      "tamil",
-      "Tamil Medium",
-      [6, 7, 8, 9, 10, 11],
-      SUBJECTS_6_11,
-    ),
-    makeMediumNode(
-      "english",
-      "English Medium",
-      [6, 7, 8, 9, 10, 11],
-      SUBJECTS_6_11,
-    ),
+    makeSecondaryMediumNode("sinhala", "Sinhala Medium"),
+    makeSecondaryMediumNode("tamil", "Tamil Medium"),
+    makeSecondaryMediumNode("english", "English Medium"),
     commonEnglishBooks6to11,
   ],
 };
@@ -344,9 +553,14 @@ function makeEssentialTermBook(
   subject: string,
   term: number,
 ): BookNode {
-  const slug = `essential-grade-${grade}-${medium}-${subject}-term-${term}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-");
+  const slug = slugify(
+    "essential-grade",
+    String(grade),
+    medium,
+    subject,
+    "term",
+    String(term),
+  );
   return {
     id: slug,
     kind: "book",
@@ -364,9 +578,7 @@ function makeEssentialSubjectNode(
   medium: string,
   subject: string,
 ): DirectoryNode {
-  const slug = `essential-subject-${grade}-${medium}-${subject}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-");
+  const slug = slugify("essential-subject", String(grade), medium, subject);
   return {
     id: slug,
     kind: "subject",
@@ -382,14 +594,17 @@ function makeEssentialGradeNode(grade: number, medium: string): DirectoryNode {
     id: `essential-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: SUBJECTS_6_11.map((s) =>
-      makeEssentialSubjectNode(grade, medium, s),
-    ),
+    children: subjectsForMedium(SECONDARY_BANDS[grade], medium as MediumKey)
+      .length
+      ? subjectsForMedium(SECONDARY_BANDS[grade], medium as MediumKey).map(
+          (s) => makeEssentialSubjectNode(grade, medium, s),
+        )
+      : [],
   };
 }
 
 function makeEssentialMediumNode(
-  medium: "sinhala" | "tamil" | "english",
+  medium: MediumKey,
   label: string,
 ): DirectoryNode {
   return {
@@ -422,9 +637,7 @@ function makeFurtherSubjectBook(
   medium: string,
   subject: string,
 ): BookNode {
-  const slug = `further-grade-${grade}-${medium}-${subject}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-");
+  const slug = slugify("further-grade", String(grade), medium, subject);
   return {
     id: slug,
     kind: "book",
@@ -449,7 +662,7 @@ function makeFurtherGradeNode(grade: number, medium: string): DirectoryNode {
 }
 
 function makeFurtherMediumNode(
-  medium: "sinhala" | "tamil" | "english",
+  medium: MediumKey,
   label: string,
 ): DirectoryNode {
   return {
@@ -516,19 +729,79 @@ export const moduleTree: DirectoryNode = {
 };
 
 // ────────────────────────────────────────────────────────────
-// Combined roots — General English no longer listed separately; it now
-// lives inside textbookTree.
+// Phase 4: Pirivena — new top-level root. No medium split, per your data.
 // ────────────────────────────────────────────────────────────
 
-export const downloadRoots: DirectoryNode[] = [textbookTree, moduleTree];
+const PIRIVENA_GRADE_1: string[] = [
+  "Sinhala",
+  "Pali Language",
+  "Sanskrit Language",
+  "Tripitaka Dhamma",
+  "Mathematics",
+  "English",
+  "Secondary Language Tamil",
+];
+const PIRIVENA_GRADE_2: string[] = [...PIRIVENA_GRADE_1, "English Workbook"];
+const PIRIVENA_GRADE_3_5: string[] = [
+  ...PIRIVENA_GRADE_2,
+  "History",
+  "Social Studies",
+  "Geography",
+  "General Science",
+  "Health",
+];
+
+function makePirivenaBook(grade: number, subject: string): BookNode {
+  const slug = slugify("pirivena-grade", String(grade), subject);
+  return {
+    id: slug,
+    kind: "book",
+    name: subject,
+    subject,
+    printYear: mockPrintYear(grade, subject),
+    fileSize: `${(1.8 + (grade % 3) * 0.4).toFixed(1)} MB`,
+    fileUrl: `/downloads/pirivena/${slug}.pdf`,
+    downloads: mockDownloads(slug),
+  };
+}
+
+function makePirivenaGradeNode(
+  grade: number,
+  subjects: string[],
+): DirectoryNode {
+  return {
+    id: `pirivena-grade-${grade}`,
+    kind: "grade",
+    name: `Grade ${grade}`,
+    children: subjects.map((s) => makePirivenaBook(grade, s)),
+  };
+}
+
+export const pirivenaTree: DirectoryNode = {
+  id: "pirivena",
+  kind: "category",
+  name: "Pirivena",
+  children: [
+    makePirivenaGradeNode(1, PIRIVENA_GRADE_1),
+    makePirivenaGradeNode(2, PIRIVENA_GRADE_2),
+    makePirivenaGradeNode(3, PIRIVENA_GRADE_3_5),
+    makePirivenaGradeNode(4, PIRIVENA_GRADE_3_5),
+    makePirivenaGradeNode(5, PIRIVENA_GRADE_3_5),
+  ],
+};
 
 // ────────────────────────────────────────────────────────────
-// Print Year grids — scoped to Textbooks Grade 1–5 / 6–11 only.
-// General English is deliberately excluded: it has no per-grade
-// breakdown yet (flat placeholder), so it can't populate a grade×subject
-// grid meaningfully.
+// Combined roots + Print Year grids
 // ────────────────────────────────────────────────────────────
 
+export const downloadRoots: DirectoryNode[] = [
+  textbookTree,
+  moduleTree,
+  pirivenaTree,
+];
+
+// Still Textbooks-only, as scoped earlier. Pirivena isn't included here yet
+// — say the word if you want a Pirivena print-year grid added too.
 export const printYearGrids: PrintYearGrid[] = [
   buildPrintYearGrid(grade1to5, "Grade 1 – 5"),
   buildPrintYearGrid(grade6to11, "Grade 6 – 11"),
