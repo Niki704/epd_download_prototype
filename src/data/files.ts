@@ -326,17 +326,23 @@ const BAND_GRADE_9: SubjectAvailability[] = [
   { name: "Mathematics Part III", mediums: ["sinhala", "tamil", "english"] },
 ];
 
-const BAND_GRADE_10_11: SubjectAvailability[] = [
+// Shared base for Grade 10 and 11 — everything they have in common.
+// Mathematics Part III is deliberately excluded here since it doesn't
+// apply to Grade 10; it's added back in only for BAND_GRADE_11 below.
+const BAND_GRADE_10_11_BASE: SubjectAvailability[] = [
   ...BAND_GRADE_9.filter(
     (s) =>
       s.name !== "Information & Communication Technology Reading Book" &&
-      s.name !== "Information & Communication Technology Workbook",
+      s.name !== "Information & Communication Technology Workbook" &&
+      s.name !== "Mathematics Part III",
   ),
   {
     name: "Information & Communication Technology",
     mediums: ["sinhala", "tamil", "english"],
   },
-  { name: "Sinhala Literature Anthology", mediums: ["sinhala", "tamil"] },
+  { name: "Sinhala Literary Appreciation", mediums: ["sinhala"] },
+  { name: "Tamil Literary Appreciation", mediums: ["tamil"] },
+  { name: "English Literary Appreciation", mediums: ["english"] },
   {
     name: "Entrepreneurship Studies",
     mediums: ["sinhala", "tamil", "english"],
@@ -359,7 +365,15 @@ const BAND_GRADE_10_11: SubjectAvailability[] = [
   { name: "Communication and Media Studies", mediums: ["sinhala", "tamil"] },
   // Doesn't fit the medium split — single edition, no Sinhala/Tamil/English
   // variants. Placed here as a pragmatic default; needs a real decision.
+  // Dev Note: This might belongs to other books category when it becomes exist.
   { name: "Japanese Language", mediums: ["sinhala"] },
+];
+
+const BAND_GRADE_10: SubjectAvailability[] = BAND_GRADE_10_11_BASE;
+
+const BAND_GRADE_11: SubjectAvailability[] = [
+  ...BAND_GRADE_10_11_BASE,
+  { name: "Mathematics Part III", mediums: ["sinhala", "tamil", "english"] },
 ];
 
 const SECONDARY_BANDS: Record<number, SubjectAvailability[]> = {
@@ -367,8 +381,8 @@ const SECONDARY_BANDS: Record<number, SubjectAvailability[]> = {
   7: BAND_GRADE_7_8,
   8: BAND_GRADE_7_8,
   9: BAND_GRADE_9,
-  10: BAND_GRADE_10_11,
-  11: BAND_GRADE_10_11,
+  10: BAND_GRADE_10,
+  11: BAND_GRADE_11,
 };
 
 function makeSecondaryMediumNode(
@@ -803,7 +817,7 @@ function makePirivenaGradeNode(
 export const pirivenaTree: DirectoryNode = {
   id: "pirivena",
   kind: "category",
-  name: "Pirivena",
+  name: "Pirivena Books",
   children: [
     makePirivenaGradeNode(1, PIRIVENA_GRADE_1),
     makePirivenaGradeNode(2, PIRIVENA_GRADE_2),
@@ -819,8 +833,8 @@ export const pirivenaTree: DirectoryNode = {
 
 export const downloadRoots: DirectoryNode[] = [
   textbookTree,
-  moduleTree,
   pirivenaTree,
+  moduleTree,
 ];
 
 // Still Textbooks-only, as scoped earlier. Pirivena isn't included here yet
