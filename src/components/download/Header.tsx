@@ -1,12 +1,14 @@
 import Image from "next/image";
+import { RefObject } from "react";
 import SearchBar from "./SearchBar";
 
 interface HeaderProps {
   query: string;
   onQueryChange: (value: string) => void;
+  searchInputRef: RefObject<HTMLInputElement | null>;
 }
 
-export default function Header({ query, onQueryChange }: HeaderProps) {
+export default function Header({ query, onQueryChange, searchInputRef }: HeaderProps) {
   return (
     <header className="relative h-56 w-full overflow-hidden sm:h-64">
       <Image
@@ -30,7 +32,11 @@ export default function Header({ query, onQueryChange }: HeaderProps) {
       </div>
 
       <div className="absolute right-4 top-5 z-10 sm:right-10 sm:top-8">
-        <SearchBar value={query} onChange={onQueryChange} />
+        <SearchBar
+          ref={searchInputRef}
+          value={query}
+          onChange={onQueryChange}
+        />
       </div>
 
       <div className="absolute bottom-6 left-6 z-10 max-w-lg sm:bottom-8 sm:left-10">
@@ -38,8 +44,8 @@ export default function Header({ query, onQueryChange }: HeaderProps) {
           School Book Download Archive
         </h1>
         <p className="mt-2 text-[13px] text-white/85 sm:text-[15px]">
-          Browse Textbooks, Modules, and Other Books by category, medium,
-          and grade or you can search directly to find the book you need.
+          Browse Textbooks, Modules, and Other Books by category, medium, and
+          grade or you can search directly to find the book you need.
         </p>
       </div>
     </header>
