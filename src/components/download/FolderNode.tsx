@@ -34,6 +34,7 @@ interface FolderNodeProps {
   depth?: number;
   forceOpen?: boolean;
   query?: string;
+  defaultOpen?: boolean;
 }
 
 export default function FolderNode({
@@ -41,8 +42,9 @@ export default function FolderNode({
   depth = 0,
   forceOpen = false,
   query = "",
+  defaultOpen,
 }: FolderNodeProps) {
-  const [manualOpen, setManualOpen] = useState(depth === 0);
+  const [manualOpen, setManualOpen] = useState(defaultOpen ?? depth === 0);
   const open = forceOpen || manualOpen;
   const Icon = KIND_ICON[node.kind];
   const bookCount = useMemo(() => countBooks(node), [node]);
@@ -86,6 +88,9 @@ export default function FolderNode({
                 depth={depth + 1}
                 forceOpen={forceOpen}
                 query={query}
+                // defaultOpen intentionally NOT passed down — it's a
+                // root-level override only, deeper levels keep the normal
+                // depth-based default.
               />
             ) : (
               <FileNode
@@ -94,7 +99,7 @@ export default function FolderNode({
                 depth={depth + 1}
                 query={query}
               />
-            )
+            ),
           )}
         </div>
       )}
