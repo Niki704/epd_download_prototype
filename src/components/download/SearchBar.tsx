@@ -22,11 +22,11 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     const showSuggestions = !suggestionsDismissed && value.trim() === "";
 
     return (
-      <div className="w-full max-w-40 sm:max-w-60 md:max-w-80">
+      <div className="w-full max-w-none">
         <div className="relative">
           <span
             aria-hidden
-            className="pointer-events-none absolute left-2 sm:left-3 top-[55%] sm:top-1/2 block h-3 w-3 sm:h-4 sm:w-4 z-10 -translate-y-1/2 bg-white/60"
+            className="pointer-events-none absolute left-2 sm:left-3 top-[55%] sm:top-1/2 block h-3 w-3 sm:h-4 sm:w-4 z-10 -translate-y-1/2 bg-[#5B615F]"
             style={{
               maskImage: "url(/search.svg)",
               maskSize: "contain",
@@ -44,23 +44,23 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="eg: physical grade 7 sinhala"
-            className="w-full rounded-full border border-white/25 bg-white/10 py-1 sm:py-2 pl-6 sm:pl-9 pr-6 sm:pr-9 text-[9px] sm:text-[14px] text-white placeholder:text-white/60 backdrop-blur-sm outline-none transition-colors focus:border-white/60 focus:bg-white/15"
+            className="w-full rounded-full border border-[#D5D1C7] bg-white py-1.5 sm:py-2 pl-6 sm:pl-9 pr-6 sm:pr-9 text-[11px] sm:text-[14px] text-[#1C1F1E] placeholder:text-[#5B615F]/70 outline-none transition-colors focus:border-[#0F4C4A]/50"
           />
           {value && (
             <button
               type="button"
               onClick={() => onChange("")}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 transition-colors hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5B615F] transition-colors hover:text-[#1C1F1E]"
             >
               <X size={15} />
             </button>
           )}
         </div>
 
-        <p className="mt-1 sm:mt-1.5 px-1 text-[9px] sm:text-[11.5px] leading-snug text-white/55">
+        <p className="mt-1 sm:mt-1.5 px-1 text-[10px] sm:text-[11.5px] leading-snug text-[#5B615F]">
           Tip: combine keywords —{" "}
-          <span className="text-white/75">
+          <span className="text-[#1C1F1E]">
             &ldquo;geography grade 11 sinhala term 2&rdquo;
           </span>{" "}
           <span className="hidden sm:inline">jumps straight to the book.</span>
@@ -73,7 +73,7 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
                 key={q}
                 type="button"
                 onClick={() => onChange(q)}
-                className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11.5px] text-white/80 transition-colors hover:border-white/50 hover:bg-white/20 hover:text-white"
+                className="rounded-full border border-[#D5D1C7] bg-[#F6F5F1] px-3 py-1 text-[11.5px] text-[#3F4543] transition-colors hover:border-[#0F4C4A]/35 hover:bg-[#EDEAE1] hover:text-[#1C1F1E]"
               >
                 {q}
               </button>
@@ -82,7 +82,7 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
               type="button"
               onClick={() => setSuggestionsDismissed(true)}
               aria-label="Hide suggested searches"
-              className="ml-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white/80"
+              className="ml-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#5B615F] transition-colors hover:bg-[#EDEAE1] hover:text-[#1C1F1E]"
             >
               <X size={13} />
             </button>
@@ -94,4 +94,3 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
 );
 
 export default SearchBar;
-

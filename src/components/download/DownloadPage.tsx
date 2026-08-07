@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Header from "./Header";
 import DownloadTree from "./DownloadTree";
+import SearchBar from "./SearchBar";
 import { downloadRoots, printYearGrids } from "@/data/files";
 import PrintYearOverview from "@/components/syllabus/PrintYearOverview";
 
@@ -38,10 +39,15 @@ export default function DownloadPage() {
 
   return (
     <>
-      <Header query={query} onQueryChange={setQuery} searchInputRef={searchInputRef} />
-      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <DownloadTree roots={downloadRoots} query={query} />
-        <PrintYearOverview grids={printYearGrids} />
+      <Header />
+      <main className="px-4 py-10 sm:px-6">
+        <div className="mx-auto mb-6 w-full max-w-5xl sm:mb-8">
+          <SearchBar ref={searchInputRef} value={query} onChange={setQuery} />
+        </div>
+        <div className="mx-auto w-full max-w-3xl">
+          <DownloadTree roots={downloadRoots} query={query} />
+          <PrintYearOverview grids={printYearGrids} />
+        </div>
       </main>
     </>
   );
