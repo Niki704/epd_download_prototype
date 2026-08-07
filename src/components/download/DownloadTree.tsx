@@ -35,6 +35,7 @@ export default function DownloadTree({ roots, query }: DownloadTreeProps) {
               depth={0}
               forceOpen={isSearching}
               query={query}
+              defaultOpen={root.id === "pirivena" ? false : undefined}
             />
           ))
         ) : (
