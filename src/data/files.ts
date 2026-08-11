@@ -493,47 +493,222 @@ export const textbookTree: DirectoryNode = {
 // + Term), Further Learning Books (6–11, with Subject, no Term).
 // ────────────────────────────────────────────────────────────
 
-const FURTHER_LEARNING_SUBJECTS = [
-  "Information & Communication Technology",
-  "Business Studies",
-  "Agriculture",
-  "Art",
-  "Music",
-  "Health & Physical Education",
-];
-
 function moduleStartYear(grade: number): number {
   return grade <= 5 ? 2025 + grade : 2021 + grade;
 }
 
-// --- Activity Books (Grades 1–5): bookType → Grade → Term, no subject layer ---
+// --- Activity Books (Grades 1–5): Medium → Grade → Term → Book.
+// Every book lives inside a specific term's folder — nothing is shared
+// across terms, per the confirmed git-diff data. Grades 1–2 are real,
+// confirmed data; Grades 3–5 are placeholders pending real booklists. ---
 
-function makeActivityTermBook(
+interface ActivityTermData {
+  term1: string[];
+  term2: string[];
+  term3: string[];
+}
+
+const ACTIVITY_BOOKS_DATA: Record<
+  number,
+  { sinhala: ActivityTermData; tamil: ActivityTermData }
+> = {
+  1: {
+    sinhala: {
+      term1: [
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 1",
+        "Akuru Nuwana 2",
+        "Reading Book",
+        "Mathematics",
+        "Elementary Science and Environment Related Activities",
+      ],
+      term2: [
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 3",
+        "Mathematics",
+        "Elementary Science and Environment Related Activities",
+      ],
+      term3: [
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 4",
+        "Mathematics",
+        "Elementary Science and Environment Related Activities",
+      ],
+    },
+    tamil: {
+      term1: [
+        "Hinduism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Eluththei Arivom 1",
+        "Eluththei Arivom 2",
+        "Reading Book",
+        "Mathematics",
+        "Elementary Science and Environment Related Activities",
+      ],
+      term2: [
+        "Hinduism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 3",
+        "Mathematics",
+        "Elementary Science and Environment Related Activities",
+      ],
+      term3: [
+        "Hinduism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 4",
+        "Mathematics",
+        "Elementary Science and Environment Related Activities",
+      ],
+    },
+  },
+  2: {
+    sinhala: {
+      term1: [
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Sinhala Reading Book",
+        "Akuru Nuwana 1",
+        "Akuru Nuwana 2",
+        "Mathematics First Term",
+        "Elementary Science & ERA",
+      ],
+      term2: [
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 3",
+        "Mathematics Second Term",
+        "Elementary Science & ERA",
+      ],
+      term3: [
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 4",
+        "Mathematics Third Term",
+        "Elementary Science & ERA",
+      ],
+    },
+    tamil: {
+      term1: [
+        "Hinduism - Saivaneri",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Tamil Reading Book",
+        "Akuru Nuwana 1",
+        "Akuru Nuwana 2",
+        "Mathematics First Term",
+        "Elementary Science & ERA",
+      ],
+      term2: [
+        "Hinduism - Saivaneri",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 3",
+        "Mathematics Second Term",
+        "Elementary Science & ERA",
+      ],
+      term3: [
+        "Hinduism - Saivaneri",
+        "Catholicism",
+        "Christianity",
+        "Islam",
+        "Akuru Nuwana 4",
+        "Mathematics Third Term",
+        "Elementary Science & ERA",
+      ],
+    },
+  },
+  // Grades 3–5 intentionally omitted here — see makeActivityGradeNode
+  // below, which falls back to a placeholder when a grade has no entry.
+};
+
+function makeActivityBook(
   grade: number,
   medium: string,
   term: number,
+  name: string,
 ): BookNode {
-  const slug = `activity-grade-${grade}-${medium}-term-${term}`;
+  const displayName = `${name} – Term ${term}`;
+  const slug = slugify(
+    "activity-grade",
+    String(grade),
+    medium,
+    "term",
+    String(term),
+    name,
+  );
   return {
     id: slug,
     kind: "book",
-    name: `Activity Book – Term ${term}`,
-    subject: "Activity Book",
-    printYear: moduleStartYear(grade),
-    fileSize: `${(1.5 + (term % 3) * 0.4).toFixed(1)} MB`,
+    name: displayName,
+    subject: name,
+    printYear: mockPrintYear(grade, name),
+    fileSize: `${(1.4 + (grade % 3) * 0.3).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
     downloads: mockDownloads(slug),
   };
 }
 
-function makeActivityGradeNode(grade: number, medium: string): DirectoryNode {
+function makeActivityTermNode(
+  grade: number,
+  medium: string,
+  term: number,
+  bookNames: string[],
+): DirectoryNode {
+  return {
+    id: `activity-grade-${grade}-${medium}-term-${term}`,
+    kind: "term",
+    name: `Term ${term}`,
+    children: bookNames.map((name) =>
+      makeActivityBook(grade, medium, term, name),
+    ),
+  };
+}
+
+function makeActivityGradeNode(
+  grade: number,
+  medium: "sinhala" | "tamil",
+): DirectoryNode {
+  const data = ACTIVITY_BOOKS_DATA[grade]?.[medium];
+  // Placeholder terms for grades without real data yet — flagged clearly
+  // so it's obvious in the UI this isn't final content.
+  const terms: ActivityTermData = data ?? {
+    term1: ["Activity Book (placeholder — awaiting real booklist)"],
+    term2: ["Activity Book (placeholder — awaiting real booklist)"],
+    term3: ["Activity Book (placeholder — awaiting real booklist)"],
+  };
+
   return {
     id: `activity-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: [1, 2, 3].map((term) =>
-      makeActivityTermBook(grade, medium, term),
-    ),
+    children: [
+      makeActivityTermNode(grade, medium, 1, terms.term1),
+      makeActivityTermNode(grade, medium, 2, terms.term2),
+      makeActivityTermNode(grade, medium, 3, terms.term3),
+    ],
   };
 }
 
@@ -549,6 +724,122 @@ function makeActivityMediumNode(
   };
 }
 
+// --- Common English Books (Modules → Activity Books only): ABOE content,
+// shared across Sinhala and Tamil Medium — no per-medium split, unlike
+// the subject books elsewhere in Activity Books. Deliberately a SEPARATE
+// tree from Textbooks' "Common English Books" — Modules and Textbooks are
+// parallel, independent curricula, not a shared content pool.
+
+function makeModuleCommonEnglishBook(
+  grade: number,
+  term: number | null,
+  name: string,
+): BookNode {
+  const displayName = term ? `${name} – Term ${term}` : name;
+  const slug = term
+    ? slugify(
+        "module-common-english-grade",
+        String(grade),
+        "term",
+        String(term),
+        name,
+      )
+    : slugify("module-common-english-grade", String(grade), name);
+  return {
+    id: slug,
+    kind: "book",
+    name: displayName,
+    subject: name,
+    printYear: mockPrintYear(grade, name),
+    fileSize: `${(1.2 + (grade % 3) * 0.3).toFixed(1)} MB`,
+    fileUrl: `/downloads/modules/${slug}.pdf`,
+    downloads: mockDownloads(slug),
+  };
+}
+
+type ModuleCommonEnglishData =
+  | { hasTerm: false; books: string[] }
+  | { hasTerm: true; term1: string[]; term2: string[]; term3: string[] };
+
+const MODULE_COMMON_ENGLISH_DATA: Record<number, ModuleCommonEnglishData> = {
+  1: {
+    hasTerm: true,
+    term1: ["ABOE Activity Book I"],
+    term2: ["ABOE Activity Book II"],
+    term3: ["ABOE Activity Book III"],
+  },
+  2: {
+    hasTerm: true,
+    term1: ["ABOE - Activity Based Oral English"],
+    term2: ["ABOE - Activity Based Oral English"],
+    term3: ["ABOE - Activity Based Oral English"],
+  },
+  // Grades 3–5 pending real data — placeholder fallback below.
+};
+
+function makeModuleCommonEnglishTermNode(
+  grade: number,
+  term: number,
+  names: string[],
+): DirectoryNode {
+  return {
+    id: `module-common-english-grade-${grade}-term-${term}`,
+    kind: "term",
+    name: `Term ${term}`,
+    children: names.map((name) =>
+      makeModuleCommonEnglishBook(grade, term, name),
+    ),
+  };
+}
+
+function makeModuleCommonEnglishGradeNode(grade: number): DirectoryNode {
+  const data = MODULE_COMMON_ENGLISH_DATA[grade];
+
+  if (!data) {
+    return {
+      id: `module-common-english-grade-${grade}`,
+      kind: "grade",
+      name: `Grade ${grade}`,
+      children: [
+        makeModuleCommonEnglishBook(
+          grade,
+          null,
+          "Common English Book (placeholder — awaiting real booklist)",
+        ),
+      ],
+    };
+  }
+
+  if (!data.hasTerm) {
+    return {
+      id: `module-common-english-grade-${grade}`,
+      kind: "grade",
+      name: `Grade ${grade}`,
+      children: data.books.map((name) =>
+        makeModuleCommonEnglishBook(grade, null, name),
+      ),
+    };
+  }
+
+  return {
+    id: `module-common-english-grade-${grade}`,
+    kind: "grade",
+    name: `Grade ${grade}`,
+    children: [
+      makeModuleCommonEnglishTermNode(grade, 1, data.term1),
+      makeModuleCommonEnglishTermNode(grade, 2, data.term2),
+      makeModuleCommonEnglishTermNode(grade, 3, data.term3),
+    ],
+  };
+}
+
+const moduleCommonEnglishBooks: DirectoryNode = {
+  id: "module-common-english-books",
+  kind: "bookType",
+  name: "Common English Books",
+  children: [1, 2, 3, 4, 5].map((g) => makeModuleCommonEnglishGradeNode(g)),
+};
+
 export const activityBooksTree: DirectoryNode = {
   id: "activity-books",
   kind: "bookType",
@@ -556,200 +847,418 @@ export const activityBooksTree: DirectoryNode = {
   children: [
     makeActivityMediumNode("sinhala", "Sinhala Medium"),
     makeActivityMediumNode("tamil", "Tamil Medium"),
+    moduleCommonEnglishBooks,
   ],
 };
 
-// --- Essential Learning Books (Grades 6–11): bookType → Medium → Grade → Subject → Term ---
+// ────────────────────────────────────────────────────────────
+// Modules — Essential Learning, Further Learning, Transversal Skills.
+// All three now share the same shape as Activity Books:
+// bookType → Medium → Grade → Term → Book. The "Subject" folder layer
+// used previously has been dropped — real data shows subjects don't
+// appear uniformly across terms, and book titles change per term rather
+// than staying fixed with just a term number attached. `subject` on each
+// BookNode still tracks the underlying topic for search/filtering, it
+// just no longer dictates tree nesting.
+// ────────────────────────────────────────────────────────────
 
-function makeEssentialTermBook(
+interface ModuleGradeTermData {
+  term1: string[];
+  term2: string[];
+  term3: string[];
+}
+
+function makeModuleTermBook(
   grade: number,
   medium: string,
-  subject: string,
   term: number,
+  name: string,
+  categorySlug: string,
 ): BookNode {
   const slug = slugify(
-    "essential-grade",
+    categorySlug,
+    "grade",
     String(grade),
     medium,
-    subject,
     "term",
     String(term),
+    name,
   );
   return {
     id: slug,
     kind: "book",
-    name: `Term ${term}`,
-    subject,
+    name,
+    subject: name,
     printYear: moduleStartYear(grade),
-    fileSize: `${(1.5 + (term % 3) * 0.4).toFixed(1)} MB`,
+    fileSize: `${(1.5 + (term % 3) * 0.35).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
     downloads: mockDownloads(slug),
   };
 }
 
-function makeEssentialSubjectNode(
+// Returns null (rather than an empty folder) when a term has no books for
+// this medium — e.g. Grade 6 Term 1 has content only for English Medium,
+// so Sinhala/Tamil Medium simply don't get a Term 1 folder at all.
+function makeModuleTermNode(
   grade: number,
   medium: string,
-  subject: string,
+  term: number,
+  names: string[],
+  categorySlug: string,
 ): DirectoryNode {
-  const slug = slugify("essential-subject", String(grade), medium, subject);
+  const books =
+    names.length > 0
+      ? names.map((n) =>
+          makeModuleTermBook(grade, medium, term, n, categorySlug),
+        )
+      : [
+          makeModuleTermBook(
+            grade,
+            medium,
+            term,
+            "Module Book (placeholder — awaiting real booklist)",
+            categorySlug,
+          ),
+        ];
+
   return {
-    id: slug,
-    kind: "subject",
-    name: subject,
+    id: `${categorySlug}-grade-${grade}-${medium}-term-${term}`,
+    kind: "term",
+    name: `Term ${term}`,
+    children: books,
+  };
+}
+
+function makeModuleGradeNode(
+  grade: number,
+  medium: string,
+  data: ModuleGradeTermData | undefined,
+  categorySlug: string,
+): DirectoryNode {
+  const terms = data ?? {
+    term1: [],
+    term2: [],
+    term3: [],
+  };
+
+  return {
+    id: `${categorySlug}-grade-${grade}-${medium}`,
+    kind: "grade",
+    name: `Grade ${grade}`,
     children: [1, 2, 3].map((term) =>
-      makeEssentialTermBook(grade, medium, subject, term),
+      makeModuleTermNode(
+        grade,
+        medium,
+        term,
+        term === 1 ? terms.term1 : term === 2 ? terms.term2 : terms.term3,
+        categorySlug,
+      ),
     ),
   };
 }
 
-function makeEssentialGradeNode(grade: number, medium: string): DirectoryNode {
-  return {
-    id: `essential-grade-${grade}-${medium}`,
-    kind: "grade",
-    name: `Grade ${grade}`,
-    children: subjectsForMedium(SECONDARY_BANDS[grade], medium as MediumKey)
-      .length
-      ? subjectsForMedium(SECONDARY_BANDS[grade], medium as MediumKey).map(
-          (s) => makeEssentialSubjectNode(grade, medium, s),
-        )
-      : [],
-  };
-}
-
-function makeEssentialMediumNode(
+function makeModuleMediumNode(
   medium: MediumKey,
   label: string,
+  gradeData: Record<number, ModuleGradeTermData>,
+  categorySlug: string,
 ): DirectoryNode {
   return {
-    id: `essential-medium-${medium}`,
+    id: `${categorySlug}-medium-${medium}`,
     kind: "medium",
     name: label,
     children: [6, 7, 8, 9, 10, 11].map((g) =>
-      makeEssentialGradeNode(g, medium),
+      makeModuleGradeNode(g, medium, gradeData[g], categorySlug),
     ),
   };
 }
+
+// --- Essential Learning Books — Grade 6 real data ---
+
+const ESSENTIAL_GRADE_6_SINHALA: ModuleGradeTermData = {
+  term1: [],
+  term2: [
+    "Buddhism – Term 2",
+    "Catholicism – Term 2",
+    "Christianity – Term 2",
+    "Islam – Term 2",
+    "Sinhala Language & Literature",
+    "Second National Language - Wadan Mihira",
+    "Mathematics - Second Term - Module 1, 2, 3",
+    "Science Second Term Module 1, 2, 3",
+    "Let's Present presentation Electronically / Instructions to Actions",
+    "Health & Physical Education Second Term Module 1, 2, 3",
+    "Technology for Life Second Term Module 1, 2",
+    "History Module 3 & 4",
+    "Amazing Earth Wonders and Challengers - Geography",
+    "Our Motherland - Civic Education",
+    "Art - Second Term",
+    "Dancing - Second Term",
+    "Oriental Music - Second Term",
+    "Drama & Theater - Second Term",
+    "Entrepreneurship & Financial Literacy - Second Term",
+  ],
+  term3: [
+    "Buddhism – Term 3",
+    "Catholicism – Term 3",
+    "Christianity – Term 3",
+    "Islam – Term 3",
+    "Sinhala Language & Literature Module 7, 8, 9",
+    "Second Language - Tamil",
+    "Mathematics - Third Term - Module 1, 2, 3",
+    "Science Third Term Module 1, 2, 3",
+    "Health & Physical Education Third Term Module 1, 2, 3",
+    "Use Internet for Explore and Communicate Information", // flagged — see note above
+    "Play and Learn with Machine Intelligence and Embedded Systems",
+    "Technology for Life Third Term Module 1, 2",
+    "Let's Commit to the Sustainable Environment - Geography",
+    "Ancient civilizations of the world - History",
+    "Law for Life - Civic Education",
+    "Art - Third Term",
+    "Dancing - Third Term",
+    "Oriental Music - Third Term",
+    "Drama & Theater - Third Term",
+    "Entrepreneurship & Financial Literacy - Third Term",
+  ],
+};
+
+const ESSENTIAL_GRADE_6_TAMIL: ModuleGradeTermData = {
+  term1: [],
+  term2: [
+    "Hinduism - Saivaneri – Term 2",
+    "Catholicism – Term 2",
+    "Christianity – Term 2",
+    "Islam – Term 2",
+    "Tamil Language & Literature – Term 2",
+    "Second National Language - Wadan Mihira",
+    "Mathematics - Second Term - Module 1, 2, 3",
+    "Science Second Term Module 1, 2, 3",
+    "Let's Present presentation Electronically / Instructions to Actions",
+    "Health & Physical Education Second Term Module 1, 2, 3",
+    "Technology for Life Second Term Module 1, 2",
+    "History Module 3 & 4",
+    "Amazing Earth Wonders and Challengers - Geography",
+    "Our Motherland - Civic Education",
+    "Art - Second Term",
+    "Bharatanatyam - Second Term",
+    "Carnatic Music - Second Term",
+    "Drama & Theater - Second Term",
+    "Entrepreneurship & Financial Literacy - Second Term",
+  ],
+  term3: [
+    "Hinduism - Saivaneri – Term 3",
+    "Catholicism – Term 3",
+    "Christianity – Term 3",
+    "Islam – Term 3",
+    "Tamil Language & Literature – Term 3",
+    "Second Language Sinhala - Kavi Gee Katha Mihira",
+    "Mathematics - Third Term - Module 1, 2, 3",
+    "Science Third Term Module 1, 2, 3",
+    "Health & Physical Education Third Term Module 1, 2, 3",
+    "Play and Learn with Machine Intelligence and Embedded Systems",
+    "Technology for Life Third Term Module 1, 2",
+    "Let's Commit to the Sustainable Environment - Geography",
+    "Ancient civilizations of the world - History",
+    "Law for Life - Civic Education",
+    "Art - Third Term",
+    "Bharatanatyam - Third Term",
+    "Carnatic Music - Third Term",
+    "Drama & Theater - Third Term",
+    "Entrepreneurship & Financial Literacy - Third Term",
+  ],
+};
+
+const ESSENTIAL_GRADE_6_ENGLISH: ModuleGradeTermData = {
+  term1: [
+    "Information and Communication Technology First Term Module 1, 2",
+    "Vision for Life - Entrepreneurship & Financial Literacy",
+  ],
+  term2: [
+    "Mathematics - Second Term - Module 1, 2, 3",
+    "Science Second Term Module 1, 2, 3",
+    "Let's Present presentation Electronically / Instructions to Actions",
+    "Health & Physical Education Second Term Module 1, 2, 3",
+    "History Module 3 & 4",
+    "Amazing Earth Wonders and Challengers - Geography",
+    "Our Motherland - Civic Education",
+    "Western Music - Second Term",
+    "Entrepreneurship & Financial Literacy - Second Term",
+  ],
+  term3: [
+    "Mathematics - Third Term - Module 1, 2, 3",
+    "Science Third Term Module 1, 2, 3",
+    "Health & Physical Education Third Term Module 1, 2, 3",
+    "Play and Learn with Machine Intelligence and Embedded Systems",
+    "Let's Commit to the Sustainable Environment - Geography",
+    "Ancient civilizations of the world - History",
+    "Law for Life - Civic Education",
+    "Western Music - Third Term",
+    "Entrepreneurship & Financial Literacy - Third Term",
+  ],
+};
+
+// Common English Books — Essential Learning only, per your instruction.
+// No confirmed content for any grade yet (Grade 6 included) — this exists
+// purely as a ready placeholder slot for future grades.
+const commonEnglishBooksEssentialLearning: DirectoryNode = {
+  id: "common-english-books-essential-learning",
+  kind: "bookType",
+  name: "Common English Books",
+  children: [6, 7, 8, 9, 10, 11].map((g) => ({
+    id: `common-english-essential-grade-${g}`,
+    kind: "grade",
+    name: `Grade ${g}`,
+    children: [
+      makeModuleTermBook(
+        g,
+        "common",
+        1,
+        "Common English Book (placeholder — awaiting confirmation)",
+        "common-english-essential",
+      ),
+    ],
+  })),
+};
 
 export const essentialLearningTree: DirectoryNode = {
   id: "essential-learning-books",
   kind: "bookType",
   name: "Essential Learning Books",
   children: [
-    makeEssentialMediumNode("sinhala", "Sinhala Medium"),
-    makeEssentialMediumNode("tamil", "Tamil Medium"),
-    makeEssentialMediumNode("english", "English Medium"),
+    makeModuleMediumNode(
+      "sinhala",
+      "Sinhala Medium",
+      { 6: ESSENTIAL_GRADE_6_SINHALA },
+      "essential",
+    ),
+    makeModuleMediumNode(
+      "tamil",
+      "Tamil Medium",
+      { 6: ESSENTIAL_GRADE_6_TAMIL },
+      "essential",
+    ),
+    makeModuleMediumNode(
+      "english",
+      "English Medium",
+      { 6: ESSENTIAL_GRADE_6_ENGLISH },
+      "essential",
+    ),
+    commonEnglishBooksEssentialLearning,
   ],
 };
 
-// --- Further Learning Books (Grades 6–11): now Grade → Subject → Term ×3,
-// matching Essential Learning Books' shape ---
+// --- Further Learning Books — Grade 6 real data ---
 
-function makeFurtherTermBook(
-  grade: number,
-  medium: string,
-  subject: string,
-  term: number,
-): BookNode {
-  const slug = slugify(
-    "further-grade",
-    String(grade),
-    medium,
-    subject,
-    "term",
-    String(term),
-  );
-  return {
-    id: slug,
-    kind: "book",
-    name: `Term ${term}`,
-    subject,
-    printYear: moduleStartYear(grade),
-    fileSize: `${(2.2 + (term % 3) * 0.4).toFixed(1)} MB`,
-    fileUrl: `/downloads/modules/${slug}.pdf`,
-    downloads: mockDownloads(slug),
-  };
-}
+const FURTHER_GRADE_6_SINHALA: ModuleGradeTermData = {
+  term1: [],
+  term2: [
+    "Mathematics Second Term - Tangrams related to Plane Figures",
+    "Let's Manage Plastic - Science",
+    "Let's Draw Pictures using Computer - ICT",
+    "Early settlements of the world - History",
+    "Appreciation of Literature - Sahitha Siyapatha",
+  ],
+  term3: [
+    "Mathematics Third Term - History of Measurements",
+    "Wonder of Science - Science",
+    "E-Learning Tools - ICT",
+    "Town Planing of ancient civilization in the world - History",
+    "Appreciation of Literature - Sahitha Kadapatha",
+  ],
+};
 
-function makeFurtherSubjectNode(
-  grade: number,
-  medium: string,
-  subject: string,
-): DirectoryNode {
-  const slug = slugify("further-subject", String(grade), medium, subject);
-  return {
-    id: slug,
-    kind: "subject",
-    name: subject,
-    children: [1, 2, 3].map((term) =>
-      makeFurtherTermBook(grade, medium, subject, term),
-    ),
-  };
-}
+const FURTHER_GRADE_6_TAMIL: ModuleGradeTermData = {
+  term1: [],
+  term2: [
+    "Mathematics Second Term - Tangrams related to Plane Figures",
+    "Let's Manage Plastic - Science",
+    "Let's Draw Pictures using Computer - ICT",
+    "Early settlements of the world - History",
+    "Tamil Literary Appreciation – Term 2",
+  ],
+  term3: [
+    "Mathematics Third Term - History of Measurements",
+    "Wonder of Science - Science",
+    "E-Learning Tools - ICT",
+    "Town Planing of ancient civilization in the world - History",
+    "Tamil Literary Appreciation – Term 3",
+  ],
+};
 
-function makeFurtherGradeNode(grade: number, medium: string): DirectoryNode {
-  return {
-    id: `further-grade-${grade}-${medium}`,
-    kind: "grade",
-    name: `Grade ${grade}`,
-    children: FURTHER_LEARNING_SUBJECTS.map((s) =>
-      makeFurtherSubjectNode(grade, medium, s),
-    ),
-  };
-}
-
-function makeFurtherMediumNode(
-  medium: MediumKey,
-  label: string,
-): DirectoryNode {
-  return {
-    id: `further-medium-${medium}`,
-    kind: "medium",
-    name: label,
-    children: [6, 7, 8, 9, 10, 11].map((g) => makeFurtherGradeNode(g, medium)),
-  };
-}
+const FURTHER_GRADE_6_ENGLISH: ModuleGradeTermData = {
+  term1: ["Story of the Life - History"],
+  term2: [
+    "Mathematics Second Term - Tangrams related to Plane Figures",
+    "Let's Manage Plastic - Science",
+    "Let's Draw Pictures using Computer - ICT",
+    "Early settlements of the world - History",
+  ],
+  term3: [
+    "Mathematics Third Term - History of Measurements",
+    "Wonder of Science - Science",
+    "E-Learning Tools - ICT",
+    "Town Planing of ancient civilization in the world - History",
+  ],
+};
 
 export const furtherLearningTree: DirectoryNode = {
   id: "further-learning-books",
   kind: "bookType",
   name: "Further Learning Books",
   children: [
-    makeFurtherMediumNode("sinhala", "Sinhala Medium"),
-    makeFurtherMediumNode("tamil", "Tamil Medium"),
-    makeFurtherMediumNode("english", "English Medium"),
+    makeModuleMediumNode(
+      "sinhala",
+      "Sinhala Medium",
+      { 6: FURTHER_GRADE_6_SINHALA },
+      "further",
+    ),
+    makeModuleMediumNode(
+      "tamil",
+      "Tamil Medium",
+      { 6: FURTHER_GRADE_6_TAMIL },
+      "further",
+    ),
+    makeModuleMediumNode(
+      "english",
+      "English Medium",
+      { 6: FURTHER_GRADE_6_ENGLISH },
+      "further",
+    ),
   ],
 };
 
-// ────────────────────────────────────────────────────────────
-// Transversal Skills Books (new — under Modules, flat, no sub-categories yet)
-// ────────────────────────────────────────────────────────────
+// --- Transversal Skills Books — Grade 6 real data (identical across all
+// three mediums, since every entry is tagged S/T/E together) ---
+
+const TRANSVERSAL_GRADE_6: ModuleGradeTermData = {
+  term1: [],
+  term2: ["Global Village - Global Studies"],
+  term3: ["Feeding the World - Global Studies"],
+};
 
 export const transversalSkillsTree: DirectoryNode = {
   id: "transversal-skills-books",
   kind: "bookType",
   name: "Transversal Skills Books",
   children: [
-    {
-      id: "transversal-social-charity-services",
-      kind: "book",
-      name: "Social Charity Services Book",
-      subject: "Social Charity Services",
-      printYear: 2026,
-      fileSize: "2.8 MB",
-      fileUrl: "/downloads/modules/transversal-social-charity-services.pdf",
-      downloads: mockDownloads("transversal-social-charity-services"),
-    },
-    {
-      id: "transversal-global-study",
-      kind: "book",
-      name: "Global Study Book",
-      subject: "Global Study",
-      printYear: 2026,
-      fileSize: "3.0 MB",
-      fileUrl: "/downloads/modules/transversal-global-study.pdf",
-      downloads: mockDownloads("transversal-global-study"),
-    },
+    makeModuleMediumNode(
+      "sinhala",
+      "Sinhala Medium",
+      { 6: TRANSVERSAL_GRADE_6 },
+      "transversal",
+    ),
+    makeModuleMediumNode(
+      "tamil",
+      "Tamil Medium",
+      { 6: TRANSVERSAL_GRADE_6 },
+      "transversal",
+    ),
+    makeModuleMediumNode(
+      "english",
+      "English Medium",
+      { 6: TRANSVERSAL_GRADE_6 },
+      "transversal",
+    ),
   ],
 };
 
