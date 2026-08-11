@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import {
-  BookMarked,
-  BookOpenCheck,
   ChevronRight,
   Folder,
   FolderOpen,
   GraduationCap,
   Layers,
+  BookMarked,
+  BookOpenCheck,
+  CalendarDays,
 } from "lucide-react";
 import { DirectoryNode, isDirectory } from "@/types/tree";
 import { highlightTokens } from "@/lib/highlight-text";
@@ -20,6 +21,7 @@ const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
   grade: Folder,
   bookType: BookMarked,
   subject: BookOpenCheck,
+  term: CalendarDays,
 };
 
 function countBooks(node: DirectoryNode): number {

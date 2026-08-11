@@ -506,41 +506,111 @@ function moduleStartYear(grade: number): number {
   return grade <= 5 ? 2025 + grade : 2021 + grade;
 }
 
-// --- Activity Books (Grades 1–5): bookType → Grade → Term, no subject layer ---
+// --- Activity Books (Grades 1–5): Medium → Grade → Term → Book.
+// Every book lives inside a specific term's folder — nothing is shared
+// across terms, per the confirmed git-diff data. Grades 1–2 are real,
+// confirmed data; Grades 3–5 are placeholders pending real booklists. ---
 
-function makeActivityTermBook(
+interface ActivityTermData {
+  term1: string[];
+  term2: string[];
+  term3: string[];
+}
+
+const ACTIVITY_BOOKS_DATA: Record<number, { sinhala: ActivityTermData; tamil: ActivityTermData }> = {
+  1: {
+    sinhala: {
+      term1: ["Buddhism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 1", "Akuru Nuwana 2", "Reading Book", "Mathematics", "Elementary Science and Environment Related Activities"],
+      term2: ["Buddhism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 3", "Mathematics", "Elementary Science and Environment Related Activities"],
+      term3: ["Buddhism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 4", "Mathematics", "Elementary Science and Environment Related Activities"],
+    },
+    tamil: {
+      term1: ["Hinduism", "Catholicism", "Christianity", "Islam", "Eluththei Arivom 1", "Eluththei Arivom 2", "Reading Book", "Mathematics", "Elementary Science and Environment Related Activities"],
+      term2: ["Hinduism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 3", "Mathematics", "Elementary Science and Environment Related Activities"],
+      term3: ["Hinduism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 4", "Mathematics", "Elementary Science and Environment Related Activities"],
+    },
+  },
+  2: {
+    sinhala: {
+      term1: ["Buddhism", "Catholicism", "Christianity", "Islam", "Sinhala Reading Book", "Akuru Nuwana 1", "Akuru Nuwana 2", "Mathematics First Term", "Elementary Science & ERA"],
+      term2: ["Buddhism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 3", "Mathematics Second Term", "Elementary Science & ERA"],
+      term3: ["Buddhism", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 4", "Mathematics Third Term", "Elementary Science & ERA"],
+    },
+    tamil: {
+      term1: ["Hinduism - Saivaneri", "Catholicism", "Christianity", "Islam", "Tamil Reading Book", "Akuru Nuwana 1", "Akuru Nuwana 2", "Mathematics First Term", "Elementary Science & ERA"],
+      term2: ["Hinduism - Saivaneri", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 3", "Mathematics Second Term", "Elementary Science & ERA"],
+      term3: ["Hinduism - Saivaneri", "Catholicism", "Christianity", "Islam", "Akuru Nuwana 4", "Mathematics Third Term", "Elementary Science & ERA"],
+    },
+  },
+  // Grades 3–5 intentionally omitted here — see makeActivityGradeNode
+  // below, which falls back to a placeholder when a grade has no entry.
+};
+
+function makeActivityBook(
   grade: number,
   medium: string,
   term: number,
+  name: string,
 ): BookNode {
-  const slug = `activity-grade-${grade}-${medium}-term-${term}`;
+  const displayName = `${name} – Term ${term}`;
+  const slug = slugify(
+    "activity-grade",
+    String(grade),
+    medium,
+    "term",
+    String(term),
+    name,
+  );
   return {
     id: slug,
     kind: "book",
-    name: `Activity Book – Term ${term}`,
-    subject: "Activity Book",
-    printYear: moduleStartYear(grade),
-    fileSize: `${(1.5 + (term % 3) * 0.4).toFixed(1)} MB`,
+    name: displayName,
+    subject: name,
+    printYear: mockPrintYear(grade, name),
+    fileSize: `${(1.4 + (grade % 3) * 0.3).toFixed(1)} MB`,
     fileUrl: `/downloads/modules/${slug}.pdf`,
     downloads: mockDownloads(slug),
   };
 }
 
-function makeActivityGradeNode(grade: number, medium: string): DirectoryNode {
+function makeActivityTermNode(
+  grade: number,
+  medium: string,
+  term: number,
+  bookNames: string[]
+): DirectoryNode {
+  return {
+    id: `activity-grade-${grade}-${medium}-term-${term}`,
+    kind: "term",
+    name: `Term ${term}`,
+    children: bookNames.map((name) => makeActivityBook(grade, medium, term, name)),
+  };
+}
+
+function makeActivityGradeNode(grade: number, medium: "sinhala" | "tamil"): DirectoryNode {
+  const data = ACTIVITY_BOOKS_DATA[grade]?.[medium];
+  // Placeholder terms for grades without real data yet — flagged clearly
+  // so it's obvious in the UI this isn't final content.
+  const terms: ActivityTermData =
+    data ?? {
+      term1: ["Activity Book (placeholder — awaiting real booklist)"],
+      term2: ["Activity Book (placeholder — awaiting real booklist)"],
+      term3: ["Activity Book (placeholder — awaiting real booklist)"],
+    };
+
   return {
     id: `activity-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: [1, 2, 3].map((term) =>
-      makeActivityTermBook(grade, medium, term),
-    ),
+    children: [
+      makeActivityTermNode(grade, medium, 1, terms.term1),
+      makeActivityTermNode(grade, medium, 2, terms.term2),
+      makeActivityTermNode(grade, medium, 3, terms.term3),
+    ],
   };
 }
 
-function makeActivityMediumNode(
-  medium: "sinhala" | "tamil",
-  label: string,
-): DirectoryNode {
+function makeActivityMediumNode(medium: "sinhala" | "tamil", label: string): DirectoryNode {
   return {
     id: `activity-medium-${medium}`,
     kind: "medium",
@@ -549,6 +619,114 @@ function makeActivityMediumNode(
   };
 }
 
+// --- Common English Books (Modules → Activity Books only): ABOE content,
+// shared across Sinhala and Tamil Medium — no per-medium split, unlike
+// the subject books elsewhere in Activity Books. Deliberately a SEPARATE
+// tree from Textbooks' "Common English Books" — Modules and Textbooks are
+// parallel, independent curricula, not a shared content pool.
+
+function makeModuleCommonEnglishBook(
+  grade: number,
+  term: number | null,
+  name: string,
+): BookNode {
+  const displayName = term ? `${name} – Term ${term}` : name;
+  const slug = term
+    ? slugify(
+        "module-common-english-grade",
+        String(grade),
+        "term",
+        String(term),
+        name,
+      )
+    : slugify("module-common-english-grade", String(grade), name);
+  return {
+    id: slug,
+    kind: "book",
+    name: displayName,
+    subject: name,
+    printYear: mockPrintYear(grade, name),
+    fileSize: `${(1.2 + (grade % 3) * 0.3).toFixed(1)} MB`,
+    fileUrl: `/downloads/modules/${slug}.pdf`,
+    downloads: mockDownloads(slug),
+  };
+}
+
+type ModuleCommonEnglishData =
+  | { hasTerm: false; books: string[] }
+  | { hasTerm: true; term1: string[]; term2: string[]; term3: string[] };
+
+const MODULE_COMMON_ENGLISH_DATA: Record<number, ModuleCommonEnglishData> = {
+  1: {
+    hasTerm: true,
+    term1: ["ABOE Activity Book I"],
+    term2: ["ABOE Activity Book II"],
+    term3: ["ABOE Activity Book III"],
+  },
+  2: {
+    hasTerm: true,
+    term1: ["ABOE - Activity Based Oral English"],
+    term2: ["ABOE - Activity Based Oral English"],
+    term3: ["ABOE - Activity Based Oral English"],
+  },
+  // Grades 3–5 pending real data — placeholder fallback below.
+};
+
+function makeModuleCommonEnglishTermNode(grade: number, term: number, names: string[]): DirectoryNode {
+  return {
+    id: `module-common-english-grade-${grade}-term-${term}`,
+    kind: "term",
+    name: `Term ${term}`,
+    children: names.map((name) => makeModuleCommonEnglishBook(grade, term, name)),
+  };
+}
+
+function makeModuleCommonEnglishGradeNode(grade: number): DirectoryNode {
+  const data = MODULE_COMMON_ENGLISH_DATA[grade];
+
+  if (!data) {
+    return {
+      id: `module-common-english-grade-${grade}`,
+      kind: "grade",
+      name: `Grade ${grade}`,
+      children: [
+        makeModuleCommonEnglishBook(
+          grade,
+          null,
+          "Common English Book (placeholder — awaiting real booklist)"
+        ),
+      ],
+    };
+  }
+
+  if (!data.hasTerm) {
+    return {
+      id: `module-common-english-grade-${grade}`,
+      kind: "grade",
+      name: `Grade ${grade}`,
+      children: data.books.map((name) => makeModuleCommonEnglishBook(grade, null, name)),
+    };
+  }
+
+  return {
+    id: `module-common-english-grade-${grade}`,
+    kind: "grade",
+    name: `Grade ${grade}`,
+    children: [
+      makeModuleCommonEnglishTermNode(grade, 1, data.term1),
+      makeModuleCommonEnglishTermNode(grade, 2, data.term2),
+      makeModuleCommonEnglishTermNode(grade, 3, data.term3),
+    ],
+  };
+}
+
+const moduleCommonEnglishBooks: DirectoryNode = {
+  id: "module-common-english-books",
+  kind: "bookType",
+  name: "Common English Books",
+  children: [1, 2, 3, 4, 5].map((g) => makeModuleCommonEnglishGradeNode(g)),
+};
+
 export const activityBooksTree: DirectoryNode = {
   id: "activity-books",
   kind: "bookType",
@@ -556,6 +734,7 @@ export const activityBooksTree: DirectoryNode = {
   children: [
     makeActivityMediumNode("sinhala", "Sinhala Medium"),
     makeActivityMediumNode("tamil", "Tamil Medium"),
+    moduleCommonEnglishBooks,
   ],
 };
 

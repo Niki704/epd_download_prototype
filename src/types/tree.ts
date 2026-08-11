@@ -6,6 +6,7 @@ export type NodeKind =
   | "grade"
   | "bookType"
   | "subject"
+  | "term"
   | "book";
 
 interface BaseNode {
@@ -14,7 +15,7 @@ interface BaseNode {
 }
 
 export interface DirectoryNode extends BaseNode {
-  kind: "category" | "medium" | "grade" | "bookType" | "subject";
+  kind: "category" | "medium" | "grade" | "bookType" | "subject" | "term";
   children: TreeNode[];
 }
 
