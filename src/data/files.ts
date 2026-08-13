@@ -716,11 +716,15 @@ function makeActivityMediumNode(
   medium: "sinhala" | "tamil",
   label: string,
 ): DirectoryNode {
+  const availableGrades = Object.keys(ACTIVITY_BOOKS_DATA)
+    .map(Number)
+    .sort((a, b) => a - b);
+
   return {
     id: `activity-medium-${medium}`,
     kind: "medium",
     name: label,
-    children: [1, 2, 3, 4, 5].map((g) => makeActivityGradeNode(g, medium)),
+    children: availableGrades.map((g) => makeActivityGradeNode(g, medium)),
   };
 }
 
@@ -837,7 +841,10 @@ const moduleCommonEnglishBooks: DirectoryNode = {
   id: "module-common-english-books",
   kind: "bookType",
   name: "Common English Books",
-  children: [1, 2, 3, 4, 5].map((g) => makeModuleCommonEnglishGradeNode(g)),
+  children: Object.keys(MODULE_COMMON_ENGLISH_DATA)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((g) => makeModuleCommonEnglishGradeNode(g)),
 };
 
 export const activityBooksTree: DirectoryNode = {
@@ -932,28 +939,26 @@ function makeModuleTermNode(
 function makeModuleGradeNode(
   grade: number,
   medium: string,
-  data: ModuleGradeTermData | undefined,
+  data: ModuleGradeTermData,
   categorySlug: string,
 ): DirectoryNode {
-  const terms = data ?? {
-    term1: [],
-    term2: [],
-    term3: [],
-  };
+  const termNodes = [1, 2, 3]
+    .map((t) =>
+      makeModuleTermNode(
+        grade,
+        medium,
+        t,
+        t === 1 ? data.term1 : t === 2 ? data.term2 : data.term3,
+        categorySlug,
+      ),
+    )
+    .filter((n): n is DirectoryNode => n !== null);
 
   return {
     id: `${categorySlug}-grade-${grade}-${medium}`,
     kind: "grade",
     name: `Grade ${grade}`,
-    children: [1, 2, 3].map((term) =>
-      makeModuleTermNode(
-        grade,
-        medium,
-        term,
-        term === 1 ? terms.term1 : term === 2 ? terms.term2 : terms.term3,
-        categorySlug,
-      ),
-    ),
+    children: termNodes,
   };
 }
 
@@ -963,11 +968,15 @@ function makeModuleMediumNode(
   gradeData: Record<number, ModuleGradeTermData>,
   categorySlug: string,
 ): DirectoryNode {
+  const availableGrades = Object.keys(gradeData)
+    .map(Number)
+    .sort((a, b) => a - b);
+  
   return {
     id: `${categorySlug}-medium-${medium}`,
     kind: "medium",
     name: label,
-    children: [6, 7, 8, 9, 10, 11].map((g) =>
+    children: availableGrades.map((g) =>
       makeModuleGradeNode(g, medium, gradeData[g], categorySlug),
     ),
   };
@@ -1008,7 +1017,7 @@ const ESSENTIAL_GRADE_6_SINHALA: ModuleGradeTermData = {
     "Mathematics - Third Term - Module 1, 2, 3",
     "Science Third Term Module 1, 2, 3",
     "Health & Physical Education Third Term Module 1, 2, 3",
-    "Use Internet for Explore and Communicate Information", // flagged — see note above
+    "Use Internet for Explore and Communicate Information",
     "Play and Learn with Machine Intelligence and Embedded Systems",
     "Technology for Life Third Term Module 1, 2",
     "Let's Commit to the Sustainable Environment - Geography",
@@ -1055,6 +1064,7 @@ const ESSENTIAL_GRADE_6_TAMIL: ModuleGradeTermData = {
     "Mathematics - Third Term - Module 1, 2, 3",
     "Science Third Term Module 1, 2, 3",
     "Health & Physical Education Third Term Module 1, 2, 3",
+    "Use Internet for Explore and Communicate Information",
     "Play and Learn with Machine Intelligence and Embedded Systems",
     "Technology for Life Third Term Module 1, 2",
     "Let's Commit to the Sustainable Environment - Geography",
@@ -1088,6 +1098,7 @@ const ESSENTIAL_GRADE_6_ENGLISH: ModuleGradeTermData = {
     "Mathematics - Third Term - Module 1, 2, 3",
     "Science Third Term Module 1, 2, 3",
     "Health & Physical Education Third Term Module 1, 2, 3",
+    "Use Internet for Explore and Communicate Information",
     "Play and Learn with Machine Intelligence and Embedded Systems",
     "Let's Commit to the Sustainable Environment - Geography",
     "Ancient civilizations of the world - History",
