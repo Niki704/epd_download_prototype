@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Info } from "lucide-react";
+import ProfileToggle from "./ProfileToggle";
 
 export default function Header() {
   return (
@@ -25,6 +26,10 @@ export default function Header() {
         />
       </div>
 
+      <div className="absolute right-5 top-6 z-10 sm:right-8 sm:top-8">
+        <ProfileToggle />
+      </div>
+
       <p className="absolute right-5 bottom-34 z-10 flex max-w-[132px] sm:max-w-[220px] items-start gap-1.5 text-left text-[10px] leading-snug text-white/60 sm:right-6 sm:bottom-8.5 sm:text-[12px]">
         <Info className="mt-0.5 shrink-0" size={13} />
         Frontend-only prototype - not a live data platform
@@ -32,7 +37,7 @@ export default function Header() {
 
       <div className="absolute bottom-42 right-6 z-10 flex flex-col items-end gap-1 sm:gap-2 text-right sm:bottom-18 sm:right-8">
         <span className="rounded-full bg-white/10 px-1.5 sm:px-3 py-1 font-mono text-[8px] sm:text-[11px] font-medium tracking-wide text-[#F2C14E]">
-          v1.04
+          v1.05
         </span>
         <Link
           href="https://github.com/Niki704"
