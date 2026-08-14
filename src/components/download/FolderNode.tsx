@@ -6,7 +6,8 @@ import {
   Folder,
   FolderOpen,
   GraduationCap,
-  Layers,
+  Library,
+  Languages,
   BookMarked,
   BookOpenCheck,
   CalendarDays,
@@ -16,9 +17,9 @@ import { highlightTokens } from "@/lib/highlight-text";
 import FileNode from "./FileNode";
 
 const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
-  category: Layers,
-  medium: GraduationCap,
-  grade: Folder,
+  category: Library,
+  medium: Languages,
+  grade: GraduationCap,
   bookType: BookMarked,
   subject: BookOpenCheck,
   term: CalendarDays,
@@ -27,7 +28,7 @@ const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
 function countBooks(node: DirectoryNode): number {
   return node.children.reduce(
     (sum, child) => sum + (isDirectory(child) ? countBooks(child) : 1),
-    0
+    0,
   );
 }
 
