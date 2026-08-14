@@ -18,7 +18,7 @@ export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps)
       href={node.fileUrl}
       download
       style={{ paddingLeft: `${depth * 1.25 + 0.75}rem` }}
-      className="group flex items-center gap-2 rounded-md py-2 pr-3 transition-colors hover:bg-[#0F4C4A0F] focus-visible:outline focus-visible:outline-[#0F4C4A]"
+      className="group flex items-center gap-2 rounded-md py-2 pr-3 transition-colors hover:bg-[#BE123C]/[0.06] focus-visible:outline focus-visible:outline-[#0F4C4A]"
     >
       <span className="w-4 shrink-0" />
       <FileText size={16} className="shrink-0 text-[#C79A3E]" />
@@ -26,7 +26,9 @@ export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps)
         {highlightTokens(node.name, query)}
       </span>
       <span className="ml-auto flex shrink-0 items-center gap-3 text-[12px] text-[#5B615F]">
-        <span className="font-mono">{node.printYear}</span>
+        <span className="font-mono" title="Latest print year">
+          {node.printYear}
+        </span>
         <span className="font-mono">{node.fileSize}</span>
         <span
           className="flex items-center gap-1 font-mono"

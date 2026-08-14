@@ -25,6 +25,17 @@ const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
   term: CalendarDays,
 };
 
+// One distinct hover background per tree level — applied only to the row
+// actually under the cursor, never cascaded to children or ancestors.
+const KIND_HOVER_BG: Record<DirectoryNode["kind"], string> = {
+  category: "hover:bg-[#0F4C4A]/[0.12]", // Color1 — primary teal
+  medium: "hover:bg-[#C79A3E]/[0.14]", // Color2 — gold
+  grade: "hover:bg-[#2563EB]/[0.12]", // Color3 — blue
+  bookType: "hover:bg-[#7C3AED]/[0.10]", // Color4 — violet
+  subject: "hover:bg-[#0D9488]/[0.10]", // teal-600, for the Subject level
+  term: "hover:bg-[#EA580C]/[0.10]", // Color5 — orange
+};
+
 function countBooks(node: DirectoryNode): number {
   return node.children.reduce(
     (sum, child) => sum + (isDirectory(child) ? countBooks(child) : 1),
@@ -60,7 +71,7 @@ export default function FolderNode({
         disabled={forceOpen}
         aria-expanded={open}
         style={{ paddingLeft: `${depth * 1.25 + 0.75}rem` }}
-        className="flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors hover:bg-[#0F4C4A0F] focus-visible:outline focus-visible:outline-[#0F4C4A] disabled:cursor-default"
+        className={`flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors focus-visible:outline focus-visible:outline-[#0F4C4A] disabled:cursor-default ${KIND_HOVER_BG[node.kind]}`}
       >
         <ChevronRight
           size={16}
