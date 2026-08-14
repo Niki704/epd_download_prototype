@@ -1,7 +1,11 @@
 "use client";
 
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { X } from "lucide-react";
+import {
+  dismissSuggestions,
+  getSuggestionsDismissedUntil,
+} from "@/lib/storage";
 
 interface SearchBarProps {
   value: string;
@@ -18,8 +22,34 @@ const SUGGESTED_QUERIES = [
 
 const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
   function SearchBar({ value, onChange }, ref) {
+    // Defaults to false so server/first-client render match; the real
+    // persisted state (if dismissed) is applied right after mount below.
     const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
     const showSuggestions = !suggestionsDismissed && value.trim() === "";
+
+    useEffect(() => {
+      const expiresAt = getSuggestionsDismissedUntil();
+      if (!expiresAt) {
+        setSuggestionsDismissed(false);
+        return;
+      }
+
+      setSuggestionsDismissed(true);
+
+      // Auto-restore suggestions the moment the 15 minute window elapses,
+      // even if the user never reloads the page.
+      const remainingMs = expiresAt - Date.now();
+      const timer = setTimeout(() => {
+        setSuggestionsDismissed(false);
+      }, remainingMs);
+
+      return () => clearTimeout(timer);
+    }, []);
+
+    function handleDismiss() {
+      dismissSuggestions();
+      setSuggestionsDismissed(true);
+    }
 
     return (
       <div className="w-full max-w-none">
@@ -80,7 +110,7 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
             ))}
             <button
               type="button"
-              onClick={() => setSuggestionsDismissed(true)}
+              onClick={handleDismiss}
               aria-label="Hide suggested searches"
               className="ml-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#5B615F] transition-colors hover:bg-[#EDEAE1] hover:text-[#1C1F1E]"
             >

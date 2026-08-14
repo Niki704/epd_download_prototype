@@ -6,10 +6,15 @@ import DownloadTree from "./DownloadTree";
 import SearchBar from "./SearchBar";
 import { downloadRoots, printYearGrids } from "@/data/files";
 import PrintYearOverview from "@/components/syllabus/PrintYearOverview";
+import {
+  UserProfileProvider,
+  useUserProfile,
+} from "@/context/UserProfileContext";
 
-export default function DownloadPage() {
+function DownloadPageContent() {
   const [query, setQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { isStaff } = useUserProfile();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -46,9 +51,17 @@ export default function DownloadPage() {
         </div>
         <div className="mx-auto w-full max-w-3xl">
           <DownloadTree roots={downloadRoots} query={query} />
-          <PrintYearOverview grids={printYearGrids} />
+          {isStaff && <PrintYearOverview grids={printYearGrids} />}
         </div>
       </main>
     </>
+  );
+}
+
+export default function DownloadPage() {
+  return (
+    <UserProfileProvider>
+      <DownloadPageContent />
+    </UserProfileProvider>
   );
 }

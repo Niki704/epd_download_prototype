@@ -1,6 +1,9 @@
+"use client";
+
 import { Download, FileText } from "lucide-react";
 import { BookNode } from "@/types/tree";
 import { highlightTokens } from "@/lib/highlight-text";
+import { useUserProfile } from "@/context/UserProfileContext";
 
 interface FileNodeProps {
   node: BookNode;
@@ -12,7 +15,13 @@ function formatDownloads(n: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 }
 
-export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps) {
+export default function FileNode({
+  node,
+  depth = 0,
+  query = "",
+}: FileNodeProps) {
+  const { isStaff } = useUserProfile();
+
   return (
     <a
       href={node.fileUrl}
@@ -26,9 +35,11 @@ export default function FileNode({ node, depth = 0, query = "" }: FileNodeProps)
         {highlightTokens(node.name, query)}
       </span>
       <span className="ml-auto flex shrink-0 items-center gap-3 text-[12px] text-[#5B615F]">
-        <span className="font-mono" title="Latest print year">
-          {node.printYear}
-        </span>
+        {isStaff && (
+          <span className="font-mono" title="Latest print year">
+            {node.printYear}
+          </span>
+        )}
         <span className="font-mono">{node.fileSize}</span>
         <span
           className="flex items-center gap-1 font-mono"
