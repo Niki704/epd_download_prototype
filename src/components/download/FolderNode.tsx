@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { DirectoryNode, isDirectory } from "@/types/tree";
 import { highlightTokens } from "@/lib/highlight-text";
+import { getGradeBadge, parseGradeNumber } from "@/lib/tm-graph";
 import FileNode from "./FileNode";
 
 const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
@@ -43,6 +44,15 @@ function countBooks(node: DirectoryNode): number {
   );
 }
 
+// Pirivena isn't part of the T/M rollout system — its grade folders
+// shouldn't show a badge even though the numbers overlap (1–5).
+function getGradeBadgeFor(node: DirectoryNode) {
+  if (node.kind !== "grade" || node.id.startsWith("pirivena")) return null;
+  const gradeNumber = parseGradeNumber(node.name);
+  if (gradeNumber === null || gradeNumber > 11) return null;
+  return getGradeBadge(gradeNumber);
+}
+
 interface FolderNodeProps {
   node: DirectoryNode;
   depth?: number;
@@ -62,6 +72,7 @@ export default function FolderNode({
   const open = forceOpen || manualOpen;
   const Icon = KIND_ICON[node.kind];
   const bookCount = useMemo(() => countBooks(node), [node]);
+  const badge = useMemo(() => getGradeBadgeFor(node), [node]);
 
   return (
     <div>
@@ -87,6 +98,29 @@ export default function FolderNode({
         <span className="truncate text-[15px] font-medium text-[#1C1F1E]">
           {highlightTokens(node.name, query)}
         </span>
+
+        {badge && (
+          <span
+            title={
+              badge.isNewThisYear
+                ? `Transitioned to Modules this year`
+                : badge.status === "M"
+                  ? "Currently Modules"
+                  : "Currently Textbooks"
+            }
+            className={`flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[10px] font-semibold ${
+              badge.status === "M"
+                ? "bg-[#0F4C4A]/10 text-[#0F4C4A]"
+                : "bg-[#E4E1D8] text-[#5B615F]"
+            }`}
+          >
+            {badge.status}
+            {badge.isNewThisYear && (
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+            )}
+          </span>
+        )}
+
         <span className="ml-auto shrink-0 rounded-full bg-[#E4E1D8] px-2 py-0.5 font-mono text-[11px] text-[#5B615F]">
           {bookCount}
         </span>

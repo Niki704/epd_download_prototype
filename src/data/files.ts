@@ -493,7 +493,7 @@ export const textbookTree: DirectoryNode = {
 // + Term), Further Learning Books (6–11, with Subject, no Term).
 // ────────────────────────────────────────────────────────────
 
-function moduleStartYear(grade: number): number {
+export function moduleStartYear(grade: number): number {
   return grade <= 5 ? 2025 + grade : 2021 + grade;
 }
 
