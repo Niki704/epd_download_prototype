@@ -1353,8 +1353,8 @@ export const pirivenaTree: DirectoryNode = {
 
 export const downloadRoots: DirectoryNode[] = [
   textbookTree,
-  pirivenaTree,
   moduleTree,
+  pirivenaTree,
 ];
 
 // Still Textbooks-only, as scoped earlier. Pirivena isn't included here yet
