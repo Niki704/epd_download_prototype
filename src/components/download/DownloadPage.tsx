@@ -5,6 +5,7 @@ import Header from "./Header";
 import DownloadTree from "./DownloadTree";
 import SearchBar from "./SearchBar";
 import { downloadRoots, printYearGrids } from "@/data/files";
+import TMGraph from "@/components/tm-graph/TMGraph";
 import PrintYearOverview from "@/components/syllabus/PrintYearOverview";
 import {
   UserProfileProvider,
@@ -29,7 +30,7 @@ function DownloadPageContent() {
       // Ctrl+R, etc., so browser/OS shortcuts keep working normally.
       const isPlainPrintableKey =
         e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
-
+      
       if (!isTypingElsewhere && isPlainPrintableKey) {
         searchInputRef.current?.focus();
         // Don't preventDefault — letting the keydown continue naturally
@@ -51,6 +52,7 @@ function DownloadPageContent() {
         </div>
         <div className="mx-auto w-full max-w-3xl">
           <DownloadTree roots={downloadRoots} query={query} />
+          <TMGraph />
           {isStaff && <PrintYearOverview grids={printYearGrids} />}
         </div>
       </main>

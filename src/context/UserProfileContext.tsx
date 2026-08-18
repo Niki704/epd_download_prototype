@@ -1,9 +1,16 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import {
   type UserProfile,
   getStoredProfile,
+  getProfileServerSnapshot,
+  subscribeToProfile,
   setStoredProfile,
 } from "@/lib/storage";
 
@@ -18,15 +25,18 @@ const UserProfileContext = createContext<UserProfileContextValue | undefined>(
 );
 
 export function UserProfileProvider({ children }: { children: ReactNode }) {
-  // Use lazy initialization to read from localStorage without triggering
-  // a cascading render. Defaults to "public" for SSR hydration compatibility.
-  const [profile, setProfileState] = useState<UserProfile>(() =>
-    getStoredProfile(),
+  // useSyncExternalStore guarantees React uses one consistent snapshot
+  // ("public", via getProfileServerSnapshot) for the entire hydration
+  // pass — even under selective/out-of-order hydration — then swaps to
+  // the real localStorage value in a single tear-free update afterward.
+  const profile = useSyncExternalStore(
+    subscribeToProfile,
+    getStoredProfile,
+    getProfileServerSnapshot,
   );
 
   function setProfile(next: UserProfile) {
-    setProfileState(next);
-    setStoredProfile(next);
+    setStoredProfile(next); // notifies subscribers, triggering a re-render
   }
 
   return (
