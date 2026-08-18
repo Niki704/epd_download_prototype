@@ -1,10 +1,14 @@
 "use client";
 
-import { forwardRef, useEffect, useState } from "react";
+import { forwardRef, useEffect, useSyncExternalStore } from "react";
 import { X } from "lucide-react";
 import {
   dismissSuggestions,
+  clearSuggestionsDismissed,
+  getSuggestionsDismissed,
+  getSuggestionsDismissedServerSnapshot,
   getSuggestionsDismissedUntil,
+  subscribeToSuggestionsDismissed,
 } from "@/lib/storage";
 
 interface SearchBarProps {
@@ -22,33 +26,35 @@ const SUGGESTED_QUERIES = [
 
 const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
   function SearchBar({ value, onChange }, ref) {
-    // Defaults to false so server/first-client render match; the real
-    // persisted state (if dismissed) is applied right after mount below.
-    const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
+    // useSyncExternalStore guarantees one consistent snapshot (false, via
+    // getSuggestionsDismissedServerSnapshot) for the entire hydration
+    // pass, then swaps to the real persisted value afterward — avoiding
+    // the tear/mismatch a plain useState+useEffect pair can hit under
+    // selective/out-of-order hydration.
+    const suggestionsDismissed = useSyncExternalStore(
+      subscribeToSuggestionsDismissed,
+      getSuggestionsDismissed,
+      getSuggestionsDismissedServerSnapshot,
+    );
     const showSuggestions = !suggestionsDismissed && value.trim() === "";
 
+    // Auto-restore suggestions the moment the 15 minute window elapses,
+    // even if the user never reloads the page. This is a timer side
+    // effect, not state derivation, so it stays in a useEffect.
     useEffect(() => {
       const expiresAt = getSuggestionsDismissedUntil();
-      if (!expiresAt) {
-        setSuggestionsDismissed(false);
-        return;
-      }
+      if (!expiresAt) return;
 
-      setSuggestionsDismissed(true);
-
-      // Auto-restore suggestions the moment the 15 minute window elapses,
-      // even if the user never reloads the page.
       const remainingMs = expiresAt - Date.now();
       const timer = setTimeout(() => {
-        setSuggestionsDismissed(false);
+        clearSuggestionsDismissed();
       }, remainingMs);
 
       return () => clearTimeout(timer);
-    }, []);
+    }, [suggestionsDismissed]);
 
     function handleDismiss() {
       dismissSuggestions();
-      setSuggestionsDismissed(true);
     }
 
     return (

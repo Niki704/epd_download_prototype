@@ -27,9 +27,32 @@ export function getStoredProfile(): UserProfile {
     : "public";
 }
 
+/** Always "public" — the one deterministic value used during SSR/hydration. */
+export function getProfileServerSnapshot(): UserProfile {
+  return "public";
+}
+
+type Listener = () => void;
+const profileListeners = new Set<Listener>();
+
+/**
+ * Subscribe to profile changes, for use with useSyncExternalStore. Also
+ * listens for the native `storage` event so other tabs stay in sync.
+ */
+export function subscribeToProfile(listener: Listener): () => void {
+  if (!isBrowser()) return () => {};
+  profileListeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    profileListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
 export function setStoredProfile(profile: UserProfile): void {
   if (!isBrowser()) return;
   window.localStorage.setItem(PROFILE_KEY, profile);
+  profileListeners.forEach((listener) => listener());
 }
 
 /* ------------------------ search suggestions TTL ------------------------ */
@@ -54,15 +77,46 @@ export function getSuggestionsDismissedUntil(): number | null {
   return expiresAt;
 }
 
+/** Simple boolean read, derived from the expiry check above. */
+export function getSuggestionsDismissed(): boolean {
+  return getSuggestionsDismissedUntil() !== null;
+}
+
+/** Always false — the one deterministic value used during SSR/hydration. */
+export function getSuggestionsDismissedServerSnapshot(): boolean {
+  return false;
+}
+
+const suggestionsListeners = new Set<Listener>();
+
+/**
+ * Subscribe to suggestions-dismissed changes, for use with
+ * useSyncExternalStore. Also listens for the native `storage` event so
+ * other tabs stay in sync.
+ */
+export function subscribeToSuggestionsDismissed(
+  listener: Listener,
+): () => void {
+  if (!isBrowser()) return () => {};
+  suggestionsListeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    suggestionsListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
 /** Marks suggestions as dismissed for the next 15 minutes. */
 export function dismissSuggestions(): void {
   if (!isBrowser()) return;
   const expiresAt = Date.now() + SUGGESTIONS_DISMISS_TTL_MS;
   window.localStorage.setItem(SUGGESTIONS_DISMISSED_KEY, String(expiresAt));
+  suggestionsListeners.forEach((listener) => listener());
 }
 
 /** Clears the dismissal immediately (used once the TTL timer fires). */
 export function clearSuggestionsDismissed(): void {
   if (!isBrowser()) return;
   window.localStorage.removeItem(SUGGESTIONS_DISMISSED_KEY);
+  suggestionsListeners.forEach((listener) => listener());
 }
