@@ -1,27 +1,22 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Public_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
-  // No `weight` array — Fraunces is a variable font, so this loads the
-  // full weight axis instead of two fixed static instances. Restricting
-  // it to specific weights was the root cause of headings silently
-  // falling back to a system font on mobile Safari, where missing-weight
-  // fake-bolding isn't reliably supported the way it is on desktop Chrome.
 });
 
-const inter = Inter({
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-public-sans",
 });
 
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   variable: "--font-plex-mono",
-  weight: ["400", "500"], // IBM Plex Mono is NOT variable — static weights are correct here
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -34,9 +29,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${fraunces.variable} ${publicSans.variable} ${plexMono.variable}`}
+    >
       <body
-        className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} antialiased`}
+         className="font-sans antialiased"
       >
         {children}
       </body>
