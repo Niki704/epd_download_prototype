@@ -9,17 +9,22 @@ import { useEffect, useRef, useState } from "react";
 
 function StatusCell({ grade, year }: { grade: number; year: number }) {
   const status = getTMStatus(grade, year);
-  const isCurrentYear = year === getCurrentYear();
+  const previousStatus = getTMStatus(grade, year - 1);
   const isM = status === "M";
+  const isCurrentYear = year === getCurrentYear();
+  // Only highlight when this grade transitions Textbook -> Module in the
+  // current real-world year specifically — not every past/future transition
+  // in the table. Still fully derived, no hardcoded year.
+  const isTransitionYear = isM && previousStatus === "T" && isCurrentYear;
 
   return (
     <span
       title={`Grade ${grade}, ${year}: ${
         isM ? `Module (${moduleLabelForGrade(grade)})` : "Textbook"
-      }`}
+      }${isTransitionYear ? " — transitioned this year" : ""}`}
       className={`flex h-7 w-7 items-center justify-center rounded-md font-mono text-[12px] font-medium ${
         isM ? "bg-[#0F4C4A] text-white" : "bg-[#E4E1D8] text-[#5B615F]"
-      } ${isCurrentYear ? "ring-2 ring-[#C79A3E] ring-offset-1" : ""}`}
+      } ${isTransitionYear ? "border-2 border-[#C79A3E]" : ""}`}
     >
       {status}
     </span>
