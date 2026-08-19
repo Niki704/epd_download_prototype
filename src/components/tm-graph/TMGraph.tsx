@@ -47,7 +47,7 @@ export default function TMGraph() {
         <h2 className="font-display text-xl text-[#0F4C4A]">TM Graph</h2>
         <p className="mt-1 text-[13px] text-[#5B615F]">
           Shows which grades have transitioned from Textbooks (T) to Modules
-          (M), year by year. Updates automatically as real time passes — no
+          (M), year by year. Updates automatically as real time passes, no
           manual edits needed as new grades convert each year.
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function TMGraph() {
                     >
                       {y}
                       {y === currentYear && (
-                        <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[#C79A3E]">
+                        <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[rgb(199,154,62)]">
                           Today
                         </div>
                       )}
@@ -101,16 +101,19 @@ export default function TMGraph() {
 
         <div className="flex shrink-0 flex-col gap-2 text-[12px] text-[#5B615F] sm:pt-8">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-[#E4E1D8]" /> T — Textbooks
+            <span className="h-3 w-3 rounded-sm bg-[#E4E1D8]" /> T – Textbooks
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-[#0F4C4A]" /> M — Modules
+            <span className="h-3 w-3 rounded-sm bg-[#0F4C4A]" /> M – Modules
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-green-500" /> Grade newly
-            transitioned
+            <span className="mb-4 h-2 w-2 shrink-0 rounded-full bg-green-500" />
+            <span>
+              Grade newly transitioned
+              <br />
+              to Modules this year
+            </span>
           </span>
-          <span> to Modules this year</span>
         </div>
       </div>
 
