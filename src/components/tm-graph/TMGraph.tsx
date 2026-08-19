@@ -52,7 +52,8 @@ export default function TMGraph() {
         </p>
       </div>
 
-      <div className="mt-5 flex items-start justify-between gap-6">
+      {/* Check here when I make this responsive | was: item-start */}
+      <div className="mt-5 flex items-center justify-between gap-6">
         <div className="relative min-w-0">
           <div ref={scrollRef} className="overflow-x-auto">
             <table className="border-separate text-left [border-spacing:0.85rem_0.25rem]">
@@ -99,7 +100,8 @@ export default function TMGraph() {
           )}
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 text-[12px] text-[#5B615F] sm:pt-8">
+        {/* Check here when I make this responsive | was: sm:pt-8 */}
+        <div className="flex shrink-0 flex-col gap-2 text-[12px] text-[#5B615F]">
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-sm bg-[#E4E1D8]" /> T – Textbooks
           </span>
@@ -107,16 +109,15 @@ export default function TMGraph() {
             <span className="h-3 w-3 rounded-sm bg-[#0F4C4A]" /> M – Modules
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="mb-4 h-2 w-2 shrink-0 rounded-full bg-green-500" />
+            <span className="mb-4 h-3 w-3 rounded-sm bg-white border-2 border-[#C79A3E]" />
             <span>
-              Grade newly transitioned
+              Grades newly transitioned
               <br />
               to Modules this year
             </span>
           </span>
         </div>
       </div>
-
       <p className="mt-5 border-t border-[#E4E1D8] pt-4 text-[12px] leading-snug text-[#5B615F]">
         For Grades 1–5, M means <strong>Activity Books</strong>. For Grades
         6–11, M means{" "}
