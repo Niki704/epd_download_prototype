@@ -9,17 +9,22 @@ import { useEffect, useRef, useState } from "react";
 
 function StatusCell({ grade, year }: { grade: number; year: number }) {
   const status = getTMStatus(grade, year);
-  const isCurrentYear = year === getCurrentYear();
+  const previousStatus = getTMStatus(grade, year - 1);
   const isM = status === "M";
+  const isCurrentYear = year === getCurrentYear();
+  // Only highlight when this grade transitions Textbook -> Module in the
+  // current real-world year specifically — not every past/future transition
+  // in the table. Still fully derived, no hardcoded year.
+  const isTransitionYear = isM && previousStatus === "T" && isCurrentYear;
 
   return (
     <span
       title={`Grade ${grade}, ${year}: ${
         isM ? `Module (${moduleLabelForGrade(grade)})` : "Textbook"
-      }`}
+      }${isTransitionYear ? " — transitioned this year" : ""}`}
       className={`flex h-7 w-7 items-center justify-center rounded-md font-mono text-[12px] font-medium ${
         isM ? "bg-[#0F4C4A] text-white" : "bg-[#E4E1D8] text-[#5B615F]"
-      } ${isCurrentYear ? "ring-2 ring-[#C79A3E] ring-offset-1" : ""}`}
+      } ${isTransitionYear ? "border-2 border-[#C79A3E]" : ""}`}
     >
       {status}
     </span>
@@ -47,12 +52,13 @@ export default function TMGraph() {
         <h2 className="font-display text-xl text-[#0F4C4A]">TM Graph</h2>
         <p className="mt-1 text-[13px] text-[#5B615F]">
           Shows which grades have transitioned from Textbooks (T) to Modules
-          (M), year by year. Updates automatically as real time passes — no
+          (M), year by year. Updates automatically as real time passes, no
           manual edits needed as new grades convert each year.
         </p>
       </div>
 
-      <div className="mt-5 flex items-start justify-between gap-6">
+      {/* Check here when I make this responsive | was: item-start */}
+      <div className="mt-5 flex items-center justify-between gap-6">
         <div className="relative min-w-0">
           <div ref={scrollRef} className="overflow-x-auto">
             <table className="border-separate text-left [border-spacing:0.85rem_0.25rem]">
@@ -70,7 +76,7 @@ export default function TMGraph() {
                     >
                       {y}
                       {y === currentYear && (
-                        <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[#C79A3E]">
+                        <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[rgb(199,154,62)]">
                           Today
                         </div>
                       )}
@@ -99,21 +105,24 @@ export default function TMGraph() {
           )}
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 text-[12px] text-[#5B615F] sm:pt-8">
+        {/* Check here when I make this responsive | was: sm:pt-8 */}
+        <div className="flex shrink-0 flex-col gap-2 text-[12px] text-[#5B615F]">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-[#E4E1D8]" /> T — Textbooks
+            <span className="h-3 w-3 rounded-sm bg-[#E4E1D8]" /> T – Textbooks
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-[#0F4C4A]" /> M — Modules
+            <span className="h-3 w-3 rounded-sm bg-[#0F4C4A]" /> M – Modules
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-green-500" /> Grade newly
-            transitioned
+            <span className="mb-4 h-3 w-3 rounded-sm bg-white border-2 border-[#C79A3E]" />
+            <span>
+              Grades newly transitioned
+              <br />
+              to Modules this year
+            </span>
           </span>
-          <span> to Modules this year</span>
         </div>
       </div>
-
       <p className="mt-5 border-t border-[#E4E1D8] pt-4 text-[12px] leading-snug text-[#5B615F]">
         For Grades 1–5, M means <strong>Activity Books</strong>. For Grades
         6–11, M means{" "}
