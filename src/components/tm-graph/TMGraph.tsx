@@ -33,6 +33,7 @@ function StatusCell({ grade, year }: { grade: number; year: number }) {
 
 export default function TMGraph() {
   const currentYear = getCurrentYear();
+  // const currentYear = 2027;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
 
