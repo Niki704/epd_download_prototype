@@ -8,9 +8,14 @@ import FolderNode from "./FolderNode";
 interface DownloadTreeProps {
   roots: DirectoryNode[];
   query: string;
+  hasActiveFilters?: boolean;
 }
 
-export default function DownloadTree({ roots, query }: DownloadTreeProps) {
+export default function DownloadTree({
+  roots,
+  query,
+  hasActiveFilters = false,
+}: DownloadTreeProps) {
   const isSearching = query.trim() !== "";
 
   const filteredRoots = useMemo(
@@ -27,13 +32,17 @@ export default function DownloadTree({ roots, query }: DownloadTreeProps) {
       style={{ backgroundImage: "url(/sidebar.png)" }}
     >
       <div className="divide-y divide-[#E4E1D8] bg-white/92">
-        {filteredRoots.length > 0 ? (
+        {roots.length === 0 ? (
+          <p className="px-4 py-8 text-center text-[14px] text-[#5B615F]">
+            No books match the selected filters.
+          </p>
+        ) : filteredRoots.length > 0 ? (
           filteredRoots.map((root) => (
             <FolderNode
               key={root.id}
               node={root}
               depth={0}
-              forceOpen={isSearching}
+              forceOpen={isSearching || hasActiveFilters}
               query={query}
               defaultOpen={root.id === "pirivena" ? false : undefined}
             />
