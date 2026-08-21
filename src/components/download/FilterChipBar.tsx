@@ -160,8 +160,8 @@ export default function FilterChipBar({
                 isActive ? "pr-2" : "pr-3"
               } ${
                 isActive
-                  ? "bg-[#0F4C4A] text-white"
-                  : "bg-[#E4E1D8] text-[#3F4543] hover:bg-[#DCD8CC]"
+                  ? "animate-chip-pop bg-primary text-white"
+                  : "bg-chip-inactive text-ink-soft hover:bg-chip-inactive-hover"
               }`}
             >
               {facet.selectedLabel ?? facet.label}
@@ -187,13 +187,13 @@ export default function FilterChipBar({
               ) : (
                 <ChevronDown
                   size={13}
-                  className={`text-[#5B615F] transition-transform ${isOpen ? "rotate-180" : ""}`}
+                  className={`text-ink-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
                 />
               )}
             </button>
 
             {isOpen && (
-              <div className="absolute right-0 top-[calc(100%+0.375rem)] z-20 max-h-64 min-w-[10rem] overflow-y-auto rounded-lg border border-[#E4E1D8] bg-white py-1 shadow-lg">
+              <div className="animate-dropdown-in absolute right-0 top-[calc(100%+0.375rem)] z-20 max-h-64 min-w-[10rem] overflow-y-auto rounded-lg border border-border bg-surface py-1 shadow-lg">
                 {facet.options.map((option) => {
                   const isSelected = facet.selectedLabel === option.label;
                   return (
@@ -201,15 +201,13 @@ export default function FilterChipBar({
                       key={option.value}
                       type="button"
                       onClick={() => selectValue(facet.key, option.value)}
-                      className={`flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-[13px] transition-colors hover:bg-[#F6F5F1] ${
-                        isSelected
-                          ? "font-semibold text-[#0F4C4A]"
-                          : "text-[#1C1F1E]"
+                      className={`flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-[13px] transition-colors hover:bg-bg ${
+                        isSelected ? "font-semibold text-primary" : "text-ink"
                       }`}
                     >
                       {option.label}
                       {isSelected && (
-                        <Check size={14} className="shrink-0 text-[#0F4C4A]" />
+                        <Check size={14} className="shrink-0 text-primary" />
                       )}
                     </button>
                   );

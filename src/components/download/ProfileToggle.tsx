@@ -18,7 +18,7 @@ export default function ProfileToggle() {
         aria-pressed={!isStaff}
         className={`rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide transition-colors sm:px-3.5 sm:py-1.5 sm:text-[11.5px] ${
           !isStaff
-            ? "bg-white text-[#0F4C4A]"
+            ? "animate-chip-pop bg-white text-primary"
             : "text-white/70 hover:text-white"
         }`}
       >
@@ -30,7 +30,7 @@ export default function ProfileToggle() {
         aria-pressed={isStaff}
         className={`rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide transition-colors sm:px-3.5 sm:py-1.5 sm:text-[11.5px] ${
           isStaff
-            ? "bg-white text-[#0F4C4A]"
+            ? "animate-chip-pop bg-white text-primary"
             : "text-white/70 hover:text-white"
         }`}
       >

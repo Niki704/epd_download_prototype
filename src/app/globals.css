@@ -29,7 +29,7 @@
   --color-accent-teal-muted: var(--color-accent-teal-muted);
 
   /* Header-specific accents (light-on-dark, so distinct from the
-    light-surface accent-gold/accent-violet shades above) */
+     light-surface accent-gold/accent-violet shades above) */
   --color-accent-gold-light: var(--color-accent-gold-light);
   --color-accent-purple: var(--color-accent-purple);
 
@@ -75,6 +75,13 @@
   --color-accent-violet: #7c3aed;
   --color-accent-teal: #0d9488;
   --color-accent-orange: #ea580c;
+  --color-accent-teal-muted: #4b8073; /* PrintYearOverview's 2023 badge */
+
+  /* Header-specific accents — lighter shades tuned for the dark banner
+     photo backdrop, distinct from the light-surface accent-gold/violet
+     used everywhere else on the white background. */
+  --color-accent-gold-light: #f2c14e; /* v1.08 version badge */
+  --color-accent-purple: #a855f7; /* GitHub link hover */
 
   /* Filter chip states (FilterChipBar) */
   --color-chip-inactive: #e4e1d8;
@@ -86,7 +93,10 @@
   --animate-fade-out: fade-out 0.15s ease-in forwards;
   --animate-dropdown-in: dropdown-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-chip-pop: chip-pop 0.22s ease-out;
-  --animate-pulse-ring: pulse-ring 1.8s ease-in-out infinite;
+  /* Capped at 3 pulses rather than infinite — this can stay "current" for
+     months (e.g. TM Graph's transition-year highlight), so it should catch
+     the eye once, not pulse forever. */
+  --animate-pulse-ring: pulse-ring 1.8s ease-in-out 3;
   --animate-expand-down: expand-down 0.2s ease-out;
 }
 

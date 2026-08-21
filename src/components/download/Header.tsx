@@ -13,7 +13,7 @@ export default function Header() {
         priority
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-[#0F4C4A]/45" />
+      <div className="absolute inset-0 bg-primary/45" />
 
       <div className="absolute left-6 top-6 z-10 sm:left-10 sm:top-8">
         <Image
@@ -36,14 +36,14 @@ export default function Header() {
       </p>
 
       <div className="absolute bottom-42 right-6 z-10 flex flex-col items-end gap-1 sm:gap-2 text-right sm:bottom-18 sm:right-8">
-        <span className="rounded-full bg-white/10 px-1.5 sm:px-3 py-1 font-mono text-[8px] sm:text-[11px] font-medium tracking-wide text-[#F2C14E]">
+        <span className="rounded-full bg-white/10 px-1.5 sm:px-3 py-1 font-mono text-[8px] sm:text-[11px] font-medium tracking-wide text-accent-gold-light">
           v1.08
         </span>
         <Link
           href="https://github.com/Niki704"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center gap-1.5 text-[10px] sm:text-[12px] text-white/60 transition-colors hover:text-[#A855F7]"
+          className="group flex items-center gap-1.5 text-[10px] sm:text-[12px] text-white/60 transition-colors hover:text-accent-purple"
         >
           <Image
             src="/github.png"
