@@ -79,7 +79,7 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="eg: physical grade 7 sinhala"
+            placeholder="Search for a book, grade, subject, or term"
             className="w-full rounded-full border border-border-strong bg-surface py-1.5 sm:py-2 pl-6 sm:pl-9 pr-6 sm:pr-9 text-[11px] sm:text-[14px] text-ink placeholder:text-ink-muted/70 outline-none transition-colors focus:border-primary/50"
           />
           {value && (

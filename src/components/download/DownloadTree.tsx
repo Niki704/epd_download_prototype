@@ -28,7 +28,7 @@ export default function DownloadTree({
 
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border shadow-sm bg-cover bg-center"
+      className="overflow-hidden rounded-xl select-none border border-border shadow-sm bg-cover bg-center"
       style={{ backgroundImage: "url(/sidebar.png)" }}
     >
       <div className="divide-y divide-border bg-white/92">

@@ -15,7 +15,7 @@ export default function Header() {
       />
       <div className="absolute inset-0 bg-primary/45" />
 
-      <div className="absolute left-6 top-6 z-10 sm:left-10 sm:top-8">
+      <div className="absolute left-6 top-6 z-10 sm:left-10 sm:top-8 select-none">
         <Image
           src="/main-logo.png"
           alt="Education Publications Department"
@@ -53,7 +53,7 @@ export default function Header() {
             className="shrink-0 opacity-90 transition-opacity group-hover:opacity-100"
           />
           <span>
-            Created by <span className="font-medium text-inherit">Niki704</span>
+            Created by <span className="font-medium text-inherit">Niklesh</span>
           </span>
         </Link>
       </div>

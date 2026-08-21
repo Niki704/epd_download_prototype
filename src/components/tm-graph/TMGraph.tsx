@@ -59,7 +59,7 @@ export default function TMGraph() {
       </div>
 
       {/* Check here when I make this responsive | was: item-start */}
-      <div className="mt-5 flex items-center justify-between gap-6">
+      <div className="mt-5 flex items-center select-none justify-between gap-6">
         <div className="relative min-w-0">
           <div ref={scrollRef} className="overflow-x-auto">
             <table className="border-separate text-left [border-spacing:0.85rem_0.25rem]">

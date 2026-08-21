@@ -28,7 +28,7 @@ function CellBadge({ year }: { year: number | null }) {
 function HeatmapTable({ grid }: { grid: PrintYearGrid }) {
   return (
     <div className="relative">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full border-separate border-spacing-1 text-left">
           <thead>
             <tr>
@@ -63,7 +63,7 @@ function HeatmapTable({ grid }: { grid: PrintYearGrid }) {
       </div>
 
       {/* Hints that more columns exist off-screen to the right */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white/15 to-transparent" />
     </div>
   );
 }
@@ -102,7 +102,7 @@ export default function PrintYearOverview({ grids }: PrintYearOverviewProps) {
         </div>
       </div>
 
-      <div className="mt-5 space-y-8">
+      <div className="mt-5 space-y-8 select-none">
         {grids.map((grid) => (
           <div key={grid.title}>
             <h3 className="mb-2 text-[13px] font-medium text-ink">
