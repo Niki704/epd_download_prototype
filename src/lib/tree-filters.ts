@@ -3,6 +3,21 @@ import { parseGradeNumber } from "@/lib/tm-graph";
 
 export type FacetKey = "grade" | "medium" | "bookType" | "term";
 
+const BOOK_TYPE_LABEL_OVERRIDES: Record<string, string> = {
+  "common-english-books-1-5": "Common English Books (Grade 1-5 Textbooks)",
+  "common-english-books-6-11": "Common English Books (Grade 6-11 Textbooks)",
+  "module-common-english-books": "Common English (Activity Books)",
+  "common-english-books-essential-learning":
+    "Common English (Essential Learning Books)",
+};
+
+const CUSTOM_BOOK_TYPE_ORDER = [
+  "common-english-books-1-5",
+  "common-english-books-6-11",
+  "module-common-english-books",
+  "common-english-books-essential-learning",
+];
+
 export interface BookTypeFacet {
   id: string;
   label: string;
@@ -29,6 +44,7 @@ interface FacetContext {
   grade?: number;
   bookTypeId?: string;
   term?: number;
+  bookTypeLocked?: boolean;
 }
 
 export function emptySelectedFilters(): SelectedFilters {
@@ -60,12 +76,38 @@ function parseTermNumber(name: string): number | null {
 // Strips a trailing parenthetical (e.g. "Activity Books (Grade 1 to 5
 // only)" -> "Activity Books") for a cleaner chip/dropdown label. The full
 // name is untouched everywhere else — this is display-only.
-function bookTypeChipLabel(name: string): string {
-  return name.replace(/\s*\([^)]*\)\s*$/, "").trim();
+function bookTypeChipLabel(node: DirectoryNode): string {
+  return (
+    BOOK_TYPE_LABEL_OVERRIDES[node.id] ??
+    node.name.replace(/\s*\([^)]*\)\s*$/, "").trim()
+  );
 }
+
+// A category becomes its own selectable "book type" only if nothing
+// beneath it already carries a real bookType node (Modules has those;
+// Textbooks and Pirivena don't) — so this never needs a hardcoded id list
+// and stays correct if the data shape changes later.
+function hasBookTypeDescendant(node: TreeNode): boolean {
+  if (!isDirectory(node)) return false;
+  if (node.kind === "bookType") return true;
+  return node.children.some(hasBookTypeDescendant);
+}
+
+// Categories whose *own* id should be the final bookTypeId for everything
+// beneath them, ignoring any bookType-kind wrapper nodes further down
+// (those wrappers exist in the data for icon/grouping purposes, not as
+// user-facing filter values). Modules is deliberately NOT here — its
+// bookType children (Activity/Essential/Further/Transversal/Common
+// English) should keep overriding, since those ARE the intended values.
+const LOCKED_BOOK_TYPE_CATEGORY_IDS = new Set(["textbooks", "pirivena"]);
 
 function nextContext(node: DirectoryNode, ctx: FacetContext): FacetContext {
   switch (node.kind) {
+    case "category":
+      if (ctx.bookTypeLocked) return ctx;
+      return LOCKED_BOOK_TYPE_CATEGORY_IDS.has(node.id)
+        ? { ...ctx, bookTypeId: node.id, bookTypeLocked: true }
+        : { ...ctx, bookTypeId: node.id };
     case "medium": {
       const medium = mediumFromName(node.name);
       return medium ? { ...ctx, medium } : ctx;
@@ -74,8 +116,9 @@ function nextContext(node: DirectoryNode, ctx: FacetContext): FacetContext {
       const grade = parseGradeNumber(node.name);
       return grade !== null ? { ...ctx, grade } : ctx;
     }
-    case "bookType":
-      return { ...ctx, bookTypeId: node.id };
+    case "bookType": {
+      return ctx.bookTypeLocked ? ctx : { ...ctx, bookTypeId: node.id };
+    }
     case "term": {
       const term = parseTermNumber(node.name);
       return term !== null ? { ...ctx, term } : ctx;
@@ -131,7 +174,7 @@ function collectFacetValues(nodes: TreeNode[]) {
   const bookTypes = new Map<string, string>();
   const terms = new Set<number>();
 
-  function walk(node: TreeNode) {
+  function walk(node: TreeNode, isRoot: boolean) {
     if (!isDirectory(node)) return;
 
     if (node.kind === "grade") {
@@ -143,17 +186,20 @@ function collectFacetValues(nodes: TreeNode[]) {
       if (medium) mediums.add(medium);
     }
     if (node.kind === "bookType") {
-      bookTypes.set(node.id, bookTypeChipLabel(node.name));
+      bookTypes.set(node.id, bookTypeChipLabel(node));
+    }
+    if (isRoot && node.kind === "category" && !hasBookTypeDescendant(node)) {
+      bookTypes.set(node.id, node.name);
     }
     if (node.kind === "term") {
       const term = parseTermNumber(node.name);
       if (term !== null) terms.add(term);
     }
 
-    node.children.forEach(walk);
+    node.children.forEach((child) => walk(child, false));
   }
 
-  nodes.forEach(walk);
+  nodes.forEach((node) => walk(node, true));
   return { grades, mediums, bookTypes, terms };
 }
 
@@ -188,9 +234,18 @@ export function computeAvailableFacets(
   return {
     grades: Array.from(gradeValues.grades).sort((a, b) => a - b),
     mediums: MEDIUM_ORDER.filter((m) => mediumValues.mediums.has(m)),
-    bookTypes: Array.from(bookTypeValues.bookTypes.entries()).map(
-      ([id, label]) => ({ id, label }),
-    ),
+    bookTypes: Array.from(bookTypeValues.bookTypes.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => {
+        const aCustomIndex = CUSTOM_BOOK_TYPE_ORDER.indexOf(a.id);
+        const bCustomIndex = CUSTOM_BOOK_TYPE_ORDER.indexOf(b.id);
+        const aIsCustom = aCustomIndex !== -1;
+        const bIsCustom = bCustomIndex !== -1;
+
+        if (aIsCustom !== bIsCustom) return aIsCustom ? 1 : -1;
+        if (aIsCustom && bIsCustom) return aCustomIndex - bCustomIndex;
+        return 0;
+      }),
     terms: Array.from(termValues.terms).sort((a, b) => a - b),
   };
 }
