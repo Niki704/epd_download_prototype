@@ -11,7 +11,6 @@ import {
   computeAvailableFacets,
   emptySelectedFilters,
   filterTreeByFacets,
-  hasAnyActiveFilter,
 } from "@/lib/tree-filters";
 import TMGraph from "@/components/tm-graph/TMGraph";
 import PrintYearOverview from "@/components/syllabus/PrintYearOverview";
@@ -91,7 +90,7 @@ function DownloadPageContent() {
           <DownloadTree
             roots={structurallyFilteredRoots}
             query={query}
-            hasActiveFilters={hasAnyActiveFilter(filters)}
+            filters={filters}
           />
           <TMGraph />
           {isStaff && <PrintYearOverview grids={printYearGrids} />}

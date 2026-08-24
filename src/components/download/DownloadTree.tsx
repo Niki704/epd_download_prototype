@@ -3,18 +3,19 @@
 import { useMemo } from "react";
 import { DirectoryNode } from "@/types/tree";
 import { filterTree } from "@/lib/tree-search";
+import { SelectedFilters } from "@/lib/tree-filters";
 import FolderNode from "./FolderNode";
 
 interface DownloadTreeProps {
   roots: DirectoryNode[];
   query: string;
-  hasActiveFilters?: boolean;
+  filters: SelectedFilters;
 }
 
 export default function DownloadTree({
   roots,
   query,
-  hasActiveFilters = false,
+  filters,
 }: DownloadTreeProps) {
   const isSearching = query.trim() !== "";
 
@@ -42,7 +43,8 @@ export default function DownloadTree({
               key={root.id}
               node={root}
               depth={0}
-              forceOpen={isSearching || hasActiveFilters}
+              forceOpen={isSearching}
+              filters={filters}
               query={query}
               defaultOpen={root.id === "pirivena" ? false : undefined}
             />
