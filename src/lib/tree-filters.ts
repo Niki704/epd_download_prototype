@@ -154,6 +154,29 @@ function hasUnmatchedSelectedFacet(
   return !bookTypeMatchesRoot && !bookTypeMatchesDescendant;
 }
 
+function representsSelectedFacet(
+  node: DirectoryNode,
+  ctx: FacetContext,
+  selected: SelectedFilters,
+): boolean {
+  if (node.kind === "medium" && selected.medium === ctx.medium) return true;
+  if (node.kind === "grade" && selected.grade === ctx.grade) return true;
+  if (node.kind === "term" && selected.term === ctx.term) return true;
+
+  if (node.kind !== "category" && node.kind !== "bookType") return false;
+  if (selected.bookTypeId === undefined) return false;
+
+  if (
+    (selected.bookTypeId === "textbooks" ||
+      selected.bookTypeId === "pirivena") &&
+    node.kind === "category"
+  ) {
+    return ctx.rootCategoryId === selected.bookTypeId;
+  }
+
+  return node.kind === "bookType" && ctx.bookTypeId === selected.bookTypeId;
+}
+
 export function shouldExpandForFilters(
   node: DirectoryNode,
   selected: SelectedFilters,
@@ -161,7 +184,11 @@ export function shouldExpandForFilters(
   isRoot: boolean,
 ): boolean {
   if (isRoot) return hasAnyActiveFilter(selected);
-  return hasUnmatchedSelectedFacet(nextFacetContext(node, ctx), selected);
+  const childContext = nextFacetContext(node, ctx);
+  return (
+    representsSelectedFacet(node, childContext, selected) ||
+    hasUnmatchedSelectedFacet(childContext, selected)
+  );
 }
 
 function matchesSelection(
