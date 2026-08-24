@@ -39,9 +39,10 @@ export interface AvailableFacets {
   terms: number[];
 }
 
-interface FacetContext {
+export interface FacetContext {
   medium?: Medium;
   grade?: number;
+  rootCategoryId?: string;
   bookTypeId?: string;
   term?: number;
   bookTypeLocked?: boolean;
@@ -83,31 +84,35 @@ function bookTypeChipLabel(node: DirectoryNode): string {
   );
 }
 
-// A category becomes its own selectable "book type" only if nothing
-// beneath it already carries a real bookType node (Modules has those;
-// Textbooks and Pirivena don't) — so this never needs a hardcoded id list
-// and stays correct if the data shape changes later.
+// A category becomes its own selectable "book type" when it has no
+// descendant bookType node. Textbooks is also exposed explicitly because it
+// is a useful root-level scope even though it contains Common English
+// bookType nodes.
 function hasBookTypeDescendant(node: TreeNode): boolean {
   if (!isDirectory(node)) return false;
   if (node.kind === "bookType") return true;
   return node.children.some(hasBookTypeDescendant);
 }
 
-// Categories whose *own* id should be the final bookTypeId for everything
-// beneath them, ignoring any bookType-kind wrapper nodes further down
-// (those wrappers exist in the data for icon/grouping purposes, not as
-// user-facing filter values). Modules is deliberately NOT here — its
-// bookType children (Activity/Essential/Further/Transversal/Common
-// English) should keep overriding, since those ARE the intended values.
-const LOCKED_BOOK_TYPE_CATEGORY_IDS = new Set(["textbooks", "pirivena"]);
+// Pirivena has no descendant bookType values, but remains locked so its root
+// category stays the effective book type if the data gains grouping nodes.
+const LOCKED_BOOK_TYPE_CATEGORY_IDS = new Set(["pirivena"]);
 
-function nextContext(node: DirectoryNode, ctx: FacetContext): FacetContext {
+export function nextFacetContext(
+  node: DirectoryNode,
+  ctx: FacetContext,
+): FacetContext {
   switch (node.kind) {
     case "category":
-      if (ctx.bookTypeLocked) return ctx;
+      if (ctx.rootCategoryId) return ctx;
       return LOCKED_BOOK_TYPE_CATEGORY_IDS.has(node.id)
-        ? { ...ctx, bookTypeId: node.id, bookTypeLocked: true }
-        : { ...ctx, bookTypeId: node.id };
+        ? {
+            ...ctx,
+            rootCategoryId: node.id,
+            bookTypeId: node.id,
+            bookTypeLocked: true,
+          }
+        : { ...ctx, rootCategoryId: node.id };
     case "medium": {
       const medium = mediumFromName(node.name);
       return medium ? { ...ctx, medium } : ctx;
@@ -128,6 +133,37 @@ function nextContext(node: DirectoryNode, ctx: FacetContext): FacetContext {
   }
 }
 
+function hasUnmatchedSelectedFacet(
+  ctx: FacetContext,
+  selected: SelectedFilters,
+): boolean {
+  if (selected.grade !== undefined && ctx.grade === undefined) return true;
+  if (selected.medium !== undefined && ctx.medium === undefined) return true;
+  if (selected.term !== undefined && ctx.term === undefined) return true;
+  if (selected.bookTypeId === undefined) return false;
+
+  const bookTypeMatchesRoot =
+    (selected.bookTypeId === "textbooks" ||
+      selected.bookTypeId === "pirivena") &&
+    ctx.rootCategoryId === selected.bookTypeId;
+  const bookTypeMatchesDescendant =
+    selected.bookTypeId !== "textbooks" &&
+    selected.bookTypeId !== "pirivena" &&
+    ctx.bookTypeId === selected.bookTypeId;
+
+  return !bookTypeMatchesRoot && !bookTypeMatchesDescendant;
+}
+
+export function shouldExpandForFilters(
+  node: DirectoryNode,
+  selected: SelectedFilters,
+  ctx: FacetContext,
+  isRoot: boolean,
+): boolean {
+  if (isRoot) return hasAnyActiveFilter(selected);
+  return hasUnmatchedSelectedFacet(nextFacetContext(node, ctx), selected);
+}
+
 function matchesSelection(
   ctx: FacetContext,
   selected: SelectedFilters,
@@ -136,11 +172,13 @@ function matchesSelection(
     return false;
   if (selected.medium !== undefined && ctx.medium !== selected.medium)
     return false;
-  if (
-    selected.bookTypeId !== undefined &&
-    ctx.bookTypeId !== selected.bookTypeId
-  )
-    return false;
+  if (selected.bookTypeId !== undefined) {
+    const matchesBookType =
+      selected.bookTypeId === "textbooks" || selected.bookTypeId === "pirivena"
+        ? ctx.rootCategoryId === selected.bookTypeId
+        : ctx.bookTypeId === selected.bookTypeId;
+    if (!matchesBookType) return false;
+  }
   if (selected.term !== undefined && ctx.term !== selected.term) return false;
   return true;
 }
@@ -158,7 +196,7 @@ export function filterTreeByFacets(
     return matchesSelection(ctx, selected) ? node : null;
   }
 
-  const childCtx = nextContext(node, ctx);
+  const childCtx = nextFacetContext(node, ctx);
   const filteredChildren = node.children
     .map((child) => filterTreeByFacets(child, selected, childCtx))
     .filter((child): child is TreeNode => child !== null);
@@ -188,7 +226,11 @@ function collectFacetValues(nodes: TreeNode[]) {
     if (node.kind === "bookType") {
       bookTypes.set(node.id, bookTypeChipLabel(node));
     }
-    if (isRoot && node.kind === "category" && !hasBookTypeDescendant(node)) {
+    if (
+      isRoot &&
+      node.kind === "category" &&
+      (node.id === "textbooks" || !hasBookTypeDescendant(node))
+    ) {
       bookTypes.set(node.id, node.name);
     }
     if (node.kind === "term") {
