@@ -4,6 +4,46 @@
   --font-display: var(--font-fraunces);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-plex-mono);
+
+  /* Base palette */
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+
+  /* Brand */
+  --color-primary: var(--color-primary);
+  --color-accent-gold: var(--color-accent-gold);
+  --color-accent-maroon: var(--color-accent-maroon);
+  --color-accent-rose: var(--color-accent-rose);
+
+  /* Per-level tree hover accents (FolderNode's KIND_HOVER_BG) */
+  --color-accent-blue: var(--color-accent-blue);
+  --color-accent-violet: var(--color-accent-violet);
+  --color-accent-teal: var(--color-accent-teal);
+  --color-accent-orange: var(--color-accent-orange);
+  --color-accent-teal-muted: var(--color-accent-teal-muted);
+
+  /* Header-specific accents (light-on-dark, so distinct from the
+     light-surface accent-gold/accent-violet shades above) */
+  --color-accent-gold-light: var(--color-accent-gold-light);
+  --color-accent-purple: var(--color-accent-purple);
+
+  /* Filter chip states */
+  --color-chip-inactive: var(--color-chip-inactive);
+  --color-chip-inactive-hover: var(--color-chip-inactive-hover);
+
+  /* Motion */
+  --animate-fade-in: var(--animate-fade-in);
+  --animate-fade-out: var(--animate-fade-out);
+  --animate-dropdown-in: var(--animate-dropdown-in);
+  --animate-chip-pop: var(--animate-chip-pop);
+  --animate-pulse-ring: var(--animate-pulse-ring);
+  --animate-expand-down: var(--animate-expand-down);
 }
 
 :root {
@@ -11,14 +51,53 @@
   --font-sans: var(--font-inter);
   --font-mono: var(--font-plex-mono);
 
+  /* Base palette */
   --color-bg: #f6f5f1;
   --color-surface: #ffffff;
+  --color-surface-hover: #edeae1;
   --color-ink: #1c1f1e;
   --color-ink-muted: #5b615f;
+  --color-ink-soft: #3f4543;
+  --color-border: #e4e1d8;
+  --color-border-strong: #d5d1c7;
+
+  /* Brand */
   --color-primary: #0f4c4a;
   --color-accent-gold: #c79a3e;
   --color-accent-maroon: #7a2e3b;
-  --color-border: #e4e1d8;
+  --color-accent-rose: #be123c;
+
+  /* Per-level tree hover accents — one distinct color per tree depth,
+     applied only to the row under the cursor (see FolderNode's
+     KIND_HOVER_BG). Naming is by hue, not by kind, since the same accent
+     could apply to a different kind if the tree's depth order ever changes. */
+  --color-accent-blue: #2563eb;
+  --color-accent-violet: #7c3aed;
+  --color-accent-teal: #0d9488;
+  --color-accent-orange: #ea580c;
+  --color-accent-teal-muted: #4b8073; /* PrintYearOverview's 2023 badge */
+
+  /* Header-specific accents — lighter shades tuned for the dark banner
+     photo backdrop, distinct from the light-surface accent-gold/violet
+     used everywhere else on the white background. */
+  --color-accent-gold-light: #f2c14e; /* v1.08 version badge */
+  --color-accent-purple: #a855f7; /* GitHub link hover */
+
+  /* Filter chip states (FilterChipBar) */
+  --color-chip-inactive: #e4e1d8;
+  --color-chip-inactive-hover: #dcd8cc;
+
+  /* Motion durations/easings, expressed as full animation shorthands so
+     they can be used directly as Tailwind's `animate-*` utilities. */
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-fade-out: fade-out 0.15s ease-in forwards;
+  --animate-dropdown-in: dropdown-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-chip-pop: chip-pop 0.22s ease-out;
+  /* Capped at 3 pulses rather than infinite — this can stay "current" for
+     months (e.g. TM Graph's transition-year highlight), so it should catch
+     the eye once, not pulse forever. */
+  --animate-pulse-ring: pulse-ring 1.8s ease-in-out 3;
+  --animate-expand-down: expand-down 0.2s ease-out;
 }
 
 body {
@@ -30,5 +109,105 @@ body {
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Scrollbars
+
+   Usage:
+   - scrollbar-thin → TM Graph's scrollable timeline, so the scrollbar
+     doesn't visually compete with the timeline's content
+   ------------------------------------------------------------------- */
+   
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------------
+   Animations
+
+   Usage once the tsx rewrite lands:
+   - animate-fade-in / animate-fade-out  → search suggestion chips
+     appearing/being dismissed, empty-state messages replacing the tree
+   - animate-dropdown-in                  → FilterChipBar's option panel
+   - animate-chip-pop                     → a facet chip going active
+   - animate-pulse-ring                   → TM Graph's transition-year
+     border and the "Today" column label, so the current-year signal
+     draws the eye without being a static ring
+   - animate-expand-down                  → FolderNode's children
+     container on open, so folders don't just snap open/closed
+   ------------------------------------------------------------------- */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes chip-pop {
+  0% {
+    transform: scale(0.94);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(199, 154, 62, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(199, 154, 62, 0);
+  }
+}
+
+@keyframes expand-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

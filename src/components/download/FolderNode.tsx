@@ -15,6 +15,12 @@ import {
 import { DirectoryNode, isDirectory } from "@/types/tree";
 import { highlightTokens } from "@/lib/highlight-text";
 import { getGradeBadge, parseGradeNumber } from "@/lib/tm-graph";
+import {
+  FacetContext,
+  nextFacetContext,
+  SelectedFilters,
+  shouldExpandForFilters,
+} from "@/lib/tree-filters";
 import FileNode from "./FileNode";
 
 const KIND_ICON: Record<DirectoryNode["kind"], typeof Folder> = {
@@ -57,6 +63,8 @@ interface FolderNodeProps {
   node: DirectoryNode;
   depth?: number;
   forceOpen?: boolean;
+  filters?: SelectedFilters;
+  filterContext?: FacetContext;
   query?: string;
   defaultOpen?: boolean;
 }
@@ -65,11 +73,20 @@ export default function FolderNode({
   node,
   depth = 0,
   forceOpen = false,
+  filters = {},
+  filterContext = {},
   query = "",
   defaultOpen,
 }: FolderNodeProps) {
   const [manualOpen, setManualOpen] = useState(defaultOpen ?? depth === 0);
-  const open = forceOpen || manualOpen;
+  const filterOpen = shouldExpandForFilters(
+    node,
+    filters,
+    filterContext,
+    depth === 0,
+  );
+  const open = forceOpen || filterOpen || manualOpen;
+  const childFilterContext = nextFacetContext(node, filterContext);
   const Icon = KIND_ICON[node.kind];
   const bookCount = useMemo(() => countBooks(node), [node]);
   const badge = useMemo(() => getGradeBadgeFor(node), [node]);
@@ -79,7 +96,7 @@ export default function FolderNode({
       <button
         type="button"
         onClick={() => setManualOpen((v) => !v)}
-        disabled={forceOpen}
+        disabled={forceOpen || filterOpen}
         aria-expanded={open}
         style={{ paddingLeft: `${depth * 1.25 + 0.75}rem` }}
         className={`flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors focus-visible:outline focus-visible:outline-[#0F4C4A] disabled:cursor-default ${KIND_HOVER_BG[node.kind]}`}
@@ -135,6 +152,8 @@ export default function FolderNode({
                 node={child}
                 depth={depth + 1}
                 forceOpen={forceOpen}
+                filters={filters}
+                filterContext={childFilterContext}
                 query={query}
                 // defaultOpen intentionally NOT passed down — it's a
                 // root-level override only, deeper levels keep the normal

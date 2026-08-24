@@ -850,7 +850,7 @@ const moduleCommonEnglishBooks: DirectoryNode = {
 export const activityBooksTree: DirectoryNode = {
   id: "activity-books",
   kind: "bookType",
-  name: "Activity Books (Grade 1 to 5 only)",
+  name: "Activity Books",
   children: [
     makeActivityMediumNode("sinhala", "Sinhala Medium"),
     makeActivityMediumNode("tamil", "Tamil Medium"),
