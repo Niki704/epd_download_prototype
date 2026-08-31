@@ -148,7 +148,14 @@ function DownloadPageContent() {
   return (
     <>
       <Header />
-      <main className="px-4 py-10 sm:px-6">
+      <main className="px-4 py-6 sm:px-6">
+        <div className="mx-auto mb-6 w-full max-w-5xl">
+          {/* Example notification usage:
+          <InfoNotify message="Hello, world!" />
+          <WarningNotify message="This is a warning message for users." />
+          <AlertNotify message="This is an alert message that needs attention." />
+          */}
+        </div>
         <div className="mx-auto mb-6 w-full max-w-5xl sm:mb-8">
           <FilterChipBar
             available={availableFacets}
