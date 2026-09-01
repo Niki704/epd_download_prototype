@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 import DownloadTree from "./DownloadTree";
+import { InfoNotify, WarningNotify, AlertNotify } from "./NotificationBar";
 import SearchBar from "./SearchBar";
 import FilterChipBar from "./FilterChipBar";
 import { downloadRoots, printYearGrids } from "@/data/files";
-import { DirectoryNode } from "@/types/tree";
+import { BookNode, DirectoryNode, TreeNode, isDirectory } from "@/types/tree";
 import {
   computeAvailableFacets,
   emptySelectedFilters,
@@ -19,9 +21,44 @@ import {
   useUserProfile,
 } from "@/context/UserProfileContext";
 
+function collectPinnedBooks(
+  nodes: TreeNode[],
+  pinnedIds: Set<string>,
+  acc: BookNode[] = [],
+): BookNode[] {
+  for (const node of nodes) {
+    if (isDirectory(node)) {
+      collectPinnedBooks(node.children, pinnedIds, acc);
+      continue;
+    }
+
+    if (pinnedIds.has(node.id)) {
+      acc.push(node);
+    }
+  }
+
+  return acc;
+}
+
+function removePinnedBooks(
+  node: TreeNode,
+  pinnedIds: Set<string>,
+): TreeNode | null {
+  if (!isDirectory(node)) {
+    return pinnedIds.has(node.id) ? null : node;
+  }
+
+  const children = node.children
+    .map((child) => removePinnedBooks(child, pinnedIds))
+    .filter((child): child is TreeNode => child !== null);
+
+  return children.length > 0 ? { ...node, children } : null;
+}
+
 function DownloadPageContent() {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState(emptySelectedFilters());
+  const [pinnedBookIds, setPinnedBookIds] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { isStaff } = useUserProfile();
 
@@ -34,6 +71,36 @@ function DownloadPageContent() {
     [filters],
   );
 
+  const pinnedBooks = useMemo(
+    () => collectPinnedBooks(downloadRoots, pinnedBookIds),
+    [pinnedBookIds],
+  );
+
+  const pinnedRoot = useMemo<DirectoryNode | null>(
+    () =>
+      pinnedBooks.length > 0
+        ? {
+            id: "pinned-books",
+            kind: "category",
+            name: "Pinned Books",
+            children: pinnedBooks,
+          }
+        : null,
+    [pinnedBooks],
+  );
+
+  const togglePinnedBook = (bookId: string) => {
+    setPinnedBookIds((current) => {
+      const next = new Set(current);
+      if (next.has(bookId)) {
+        next.delete(bookId);
+      } else {
+        next.add(bookId);
+      }
+      return next;
+    });
+  };
+
   // Structural filtering runs BEFORE the tree's own text search — it just
   // narrows which roots/branches even reach DownloadTree, so the existing
   // filterTree(query) logic there keeps working unmodified and the two
@@ -41,11 +108,17 @@ function DownloadPageContent() {
   const structurallyFilteredRoots = useMemo(
     () =>
       downloadRoots
-        .map(
-          (root) => filterTreeByFacets(root, filters) as DirectoryNode | null,
-        )
+        .map((root) => {
+          const withoutPinned = removePinnedBooks(root, pinnedBookIds);
+          return withoutPinned
+            ? (filterTreeByFacets(
+                withoutPinned,
+                filters,
+              ) as DirectoryNode | null)
+            : null;
+        })
         .filter((root): root is DirectoryNode => root !== null),
-    [filters],
+    [filters, pinnedBookIds],
   );
 
   useEffect(() => {
@@ -77,7 +150,13 @@ function DownloadPageContent() {
   return (
     <>
       <Header />
-      <main className="px-4 py-10 sm:px-6">
+      <main className="px-4 py-6 sm:px-6">
+        <div className="mx-auto mb-4 w-full max-w-5xl">
+          {/* Put your notifications here: */}
+          <InfoNotify message="This is a prototype for the Education Publications Department. It doesn't serve real PDF files. It's a structural representation of the current Textbook, Module, and Pirivena Book hierarchy, built based on actual book names and mock metadata." />
+          <WarningNotify message="Download buttons are just placeholders in this prototype. Since no backend or file storage is connected yet, clicking one won't return an actual PDF." />
+          <AlertNotify message="The Staff/Public toggle is a local display preference, not an authentication system. It only shows what's changed on the UI when access control is applied. Print years and staff-only data aren't protected behind it." />
+        </div>
         <div className="mx-auto mb-6 w-full max-w-5xl sm:mb-8">
           <FilterChipBar
             available={availableFacets}
@@ -89,13 +168,17 @@ function DownloadPageContent() {
         <div className="mx-auto w-full max-w-3xl">
           <DownloadTree
             roots={structurallyFilteredRoots}
+            pinnedRoot={pinnedRoot}
             query={query}
             filters={filters}
+            pinnedBookIds={pinnedBookIds}
+            onTogglePin={togglePinnedBook}
           />
           <TMGraph />
           {isStaff && <PrintYearOverview grids={printYearGrids} />}
         </div>
       </main>
+      <Footer />
     </>
   );
 }

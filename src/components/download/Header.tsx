@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Info } from "lucide-react";
+import packageJson from "../../../package.json";
 import ProfileToggle from "./ProfileToggle";
+
+const appVersion = `v${packageJson.version}`;
 
 export default function Header() {
   return (
@@ -37,7 +40,7 @@ export default function Header() {
 
       <div className="absolute bottom-42 right-6 z-10 flex flex-col items-end gap-1 sm:gap-2 text-right sm:bottom-18 sm:right-8">
         <span className="rounded-full bg-white/10 px-1.5 sm:px-3 py-1 font-mono text-[8px] sm:text-[11px] font-medium tracking-wide text-accent-gold-light">
-          v1.08
+          {appVersion}
         </span>
         <Link
           href="https://github.com/Niki704"

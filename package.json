@@ -1,6 +1,6 @@
 {
   "name": "epd_download_prototype",
-  "version": "0.1.0",
+  "version": "1.09",
   "private": true,
   "scripts": {
     "dev": "next dev",

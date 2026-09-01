@@ -67,6 +67,8 @@ interface FolderNodeProps {
   filterContext?: FacetContext;
   query?: string;
   defaultOpen?: boolean;
+  pinnedBookIds?: Set<string>;
+  onTogglePin?: (bookId: string) => void;
 }
 
 export default function FolderNode({
@@ -77,6 +79,8 @@ export default function FolderNode({
   filterContext = {},
   query = "",
   defaultOpen,
+  pinnedBookIds,
+  onTogglePin,
 }: FolderNodeProps) {
   const [manualOpen, setManualOpen] = useState(defaultOpen ?? depth === 0);
   const filterOpen = shouldExpandForFilters(
@@ -90,6 +94,7 @@ export default function FolderNode({
   const Icon = KIND_ICON[node.kind];
   const bookCount = useMemo(() => countBooks(node), [node]);
   const badge = useMemo(() => getGradeBadgeFor(node), [node]);
+  const isPinnedRoot = node.id === "pinned-books";
 
   return (
     <div>
@@ -99,7 +104,7 @@ export default function FolderNode({
         disabled={forceOpen || filterOpen}
         aria-expanded={open}
         style={{ paddingLeft: `${depth * 1.25 + 0.75}rem` }}
-        className={`flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors focus-visible:outline focus-visible:outline-[#0F4C4A] disabled:cursor-default ${KIND_HOVER_BG[node.kind]}`}
+        className={`flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors focus-visible:outline focus-visible:outline-[#0F4C4A] disabled:cursor-default ${isPinnedRoot ? "hover:bg-[#7C2D12]/[0.12]" : KIND_HOVER_BG[node.kind]}`}
       >
         <ChevronRight
           size={16}
@@ -108,9 +113,15 @@ export default function FolderNode({
           }`}
         />
         {open ? (
-          <FolderOpen size={17} className="shrink-0 text-[#0F4C4A]" />
+          <FolderOpen
+            size={17}
+            className={`shrink-0 ${isPinnedRoot ? "text-[#7C2D12]" : "text-[#0F4C4A]"}`}
+          />
         ) : (
-          <Icon size={17} className="shrink-0 text-[#0F4C4A]" />
+          <Icon
+            size={17}
+            className={`shrink-0 ${isPinnedRoot ? "text-[#7C2D12]" : "text-[#0F4C4A]"}`}
+          />
         )}
         <span className="truncate text-[15px] font-medium text-[#1C1F1E]">
           {highlightTokens(node.name, query)}
@@ -155,6 +166,8 @@ export default function FolderNode({
                 filters={filters}
                 filterContext={childFilterContext}
                 query={query}
+                pinnedBookIds={pinnedBookIds}
+                onTogglePin={onTogglePin}
                 // defaultOpen intentionally NOT passed down — it's a
                 // root-level override only, deeper levels keep the normal
                 // depth-based default.
@@ -165,6 +178,8 @@ export default function FolderNode({
                 node={child}
                 depth={depth + 1}
                 query={query}
+                isPinned={pinnedBookIds?.has(child.id) ?? false}
+                onTogglePin={onTogglePin}
               />
             ),
           )}
