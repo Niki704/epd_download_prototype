@@ -5,7 +5,7 @@ import "./globals.css";
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   "https://epd-download-prototype.vercel.app";
-const ogImagePath = "/epd-prototype%20v1.09.png";
+const ogImagePath = "/epd-prototype%20v1.08.png";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
