@@ -120,3 +120,138 @@ export function clearSuggestionsDismissed(): void {
   window.localStorage.removeItem(SUGGESTIONS_DISMISSED_KEY);
   suggestionsListeners.forEach((listener) => listener());
 }
+
+/* --------------------- notifications dismissal TTL --------------------- */
+
+const NOTIFICATIONS_DISMISSED_KEY = "epd:notifications-dismissed";
+const NOTIFICATION_DISMISS_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+interface NotificationDismissals {
+  [messageHash: string]: number;
+}
+
+/** Simple hash function for notification messages. */
+function hashNotificationMessage(message: string): string {
+  let hash = 0;
+  for (let i = 0; i < message.length; i++) {
+    const char = message.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return `n_${Math.abs(hash).toString(36)}`;
+}
+
+/**
+ * Returns the expiry timestamp (ms epoch) if a notification is currently
+ * dismissed, or null if it's not dismissed / the dismissal has expired.
+ * Expired entries are cleaned up as a side effect.
+ */
+export function getNotificationDismissedUntil(message: string): number | null {
+  if (!isBrowser()) return null;
+
+  const raw = window.localStorage.getItem(NOTIFICATIONS_DISMISSED_KEY);
+  if (!raw) return null;
+
+  let dismissals: NotificationDismissals;
+  try {
+    dismissals = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+
+  const hash = hashNotificationMessage(message);
+  const expiresAt = dismissals[hash];
+
+  if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) {
+    delete dismissals[hash];
+    if (Object.keys(dismissals).length === 0) {
+      window.localStorage.removeItem(NOTIFICATIONS_DISMISSED_KEY);
+    } else {
+      window.localStorage.setItem(
+        NOTIFICATIONS_DISMISSED_KEY,
+        JSON.stringify(dismissals),
+      );
+    }
+    return null;
+  }
+
+  return expiresAt;
+}
+
+/** Simple boolean read, derived from the expiry check above. */
+export function isNotificationDismissed(message: string): boolean {
+  return getNotificationDismissedUntil(message) !== null;
+}
+
+/** Always false — the one deterministic value used during SSR/hydration. */
+export function getNotificationDismissedServerSnapshot(): boolean {
+  return false;
+}
+
+const notificationListeners = new Set<Listener>();
+
+/**
+ * Subscribe to notifications-dismissed changes, for use with
+ * useSyncExternalStore. Also listens for the native `storage` event so
+ * other tabs stay in sync.
+ */
+export function subscribeToNotificationDismissed(
+  listener: Listener,
+): () => void {
+  if (!isBrowser()) return () => {};
+  notificationListeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    notificationListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+/** Marks a notification as dismissed for the next 15 minutes. */
+export function dismissNotification(message: string): void {
+  if (!isBrowser()) return;
+  const raw = window.localStorage.getItem(NOTIFICATIONS_DISMISSED_KEY) || "{}";
+
+  let dismissals: NotificationDismissals;
+  try {
+    dismissals = JSON.parse(raw);
+  } catch {
+    dismissals = {};
+  }
+
+  const hash = hashNotificationMessage(message);
+  dismissals[hash] = Date.now() + NOTIFICATION_DISMISS_TTL_MS;
+
+  window.localStorage.setItem(
+    NOTIFICATIONS_DISMISSED_KEY,
+    JSON.stringify(dismissals),
+  );
+  notificationListeners.forEach((listener) => listener());
+}
+
+/** Clears the dismissal for a specific notification immediately. */
+export function clearNotificationDismissed(message: string): void {
+  if (!isBrowser()) return;
+  const raw = window.localStorage.getItem(NOTIFICATIONS_DISMISSED_KEY);
+  if (!raw) return;
+
+  let dismissals: NotificationDismissals;
+  try {
+    dismissals = JSON.parse(raw);
+  } catch {
+    return;
+  }
+
+  const hash = hashNotificationMessage(message);
+  delete dismissals[hash];
+
+  if (Object.keys(dismissals).length === 0) {
+    window.localStorage.removeItem(NOTIFICATIONS_DISMISSED_KEY);
+  } else {
+    window.localStorage.setItem(
+      NOTIFICATIONS_DISMISSED_KEY,
+      JSON.stringify(dismissals),
+    );
+  }
+  notificationListeners.forEach((listener) => listener());
+}

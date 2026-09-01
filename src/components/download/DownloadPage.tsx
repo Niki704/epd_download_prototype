@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "./Header";
 import DownloadTree from "./DownloadTree";
+import { InfoNotify, WarningNotify, AlertNotify } from "./NotificationBar";
 import SearchBar from "./SearchBar";
 import FilterChipBar from "./FilterChipBar";
 import { downloadRoots, printYearGrids } from "@/data/files";
@@ -149,12 +150,11 @@ function DownloadPageContent() {
     <>
       <Header />
       <main className="px-4 py-6 sm:px-6">
-        <div className="mx-auto mb-6 w-full max-w-5xl">
-          {/* Example notification usage:
-          <InfoNotify message="Hello, world!" />
-          <WarningNotify message="This is a warning message for users." />
-          <AlertNotify message="This is an alert message that needs attention." />
-          */}
+        <div className="mx-auto mb-4 w-full max-w-5xl">
+          {/* Put your notifications here: */}
+          <InfoNotify message="This is a prototype for the Education Publications Department. It doesn't serve real PDF files. It's a structural representation of the current Textbook, Module, and Pirivena Book hierarchy, built based on actual book names and mock metadata." />
+          <WarningNotify message="Download buttons are just placeholders in this prototype. Since no backend or file storage is connected yet, clicking one won't return an actual PDF." />
+          <AlertNotify message="The Staff/Public toggle is a local display preference, not an authentication system. It only shows what's changed on the UI when access control is applied. Print years and staff-only data aren't protected behind it." />
         </div>
         <div className="mx-auto mb-6 w-full max-w-5xl sm:mb-8">
           <FilterChipBar
