@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 import DownloadTree from "./DownloadTree";
 import { InfoNotify, WarningNotify, AlertNotify } from "./NotificationBar";
 import SearchBar from "./SearchBar";
@@ -177,6 +178,7 @@ function DownloadPageContent() {
           {isStaff && <PrintYearOverview grids={printYearGrids} />}
         </div>
       </main>
+      <Footer />
     </>
   );
 }
