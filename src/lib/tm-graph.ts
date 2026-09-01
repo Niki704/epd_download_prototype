@@ -2,6 +2,14 @@ import { moduleStartYear } from "@/data/files";
 
 export type TMStatus = "T" | "M";
 
+// ─────────────────────────────────────────────────────────────────────
+// TESTING OVERRIDE: Set this to test how the graph looks in future years.
+// For example: TEST_OVERRIDE_YEAR = 2027;
+// Then all functions (header, cells, badges) will use 2027 as "today".
+// Set back to null for production (automatic system year).
+// ──────────────────────────────────────────────────────
+const TEST_OVERRIDE_YEAR: number | null = null;
+
 export const TM_GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 // 2025 = last fully-Textbook year; 2032 = full rollout completion.
@@ -11,7 +19,7 @@ export const TM_YEARS = Array.from(
 );
 
 export function getCurrentYear(): number {
-  return new Date().getFullYear();
+  return TEST_OVERRIDE_YEAR ?? new Date().getFullYear();
 }
 
 // Computed live — never hardcoded per year, so both the graph and the
