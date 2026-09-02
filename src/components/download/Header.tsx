@@ -29,7 +29,7 @@ export default function Header() {
         />
       </div>
 
-      <div className="absolute right-5 top-6 z-10 sm:right-8 sm:top-8">
+      <div className="absolute right-[66px] top-3 z-20 sm:right-8 sm:top-8">
         <ProfileToggle />
       </div>
 
